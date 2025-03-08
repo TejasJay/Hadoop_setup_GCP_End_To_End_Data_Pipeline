@@ -50,7 +50,7 @@ To install and configure Hadoop, SSH into the master node:
 
 sh
 
-""
+ 
 
 `gcloud compute ssh hadoop-master`
 
@@ -64,7 +64,7 @@ On **each node (master + workers)**, install Java:
 
 sh
 
-""
+ 
 
 `sudo apt update sudo apt install openjdk-11-jdk -y`
 
@@ -72,7 +72,7 @@ Verify:
 
 sh
 
-""
+ 
 
 `java -version`
 
@@ -80,7 +80,7 @@ sh
 
 nginx
 
-""
+ 
 
 `openjdk version "11.0.x"`
 
@@ -94,7 +94,7 @@ On **each node (master + workers)**:
 
 sh
 
-""
+ 
 
 `wget https://downloads.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz`
 
@@ -102,7 +102,7 @@ sh
 
 sh
 
-""
+ 
 
 `tar -xvzf hadoop-3.3.6.tar.gz sudo mv hadoop-3.3.6 /usr/local/hadoop`
 
@@ -116,7 +116,7 @@ On **each node (master + workers)**:
 
 sh
 
-""
+ 
 
 `nano ~/.bashrc`
 
@@ -124,7 +124,7 @@ sh
 
 sh
 
-""
+ 
 
 `export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64 export HADOOP_HOME=/usr/local/hadoop export HADOOP_MAPRED_HOME=$HADOOP_HOME export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop export YARN_CONF_DIR=$HADOOP_HOME/etc/hadoop`
 
@@ -132,7 +132,7 @@ sh
 
 sh
 
-""
+ 
 
 `source ~/.bashrc`
 
@@ -140,7 +140,7 @@ sh
 
 sh
 
-""
+ 
 
 `hadoop version`
 
@@ -158,7 +158,7 @@ On **each node (master + workers)**:
 
 sh
 
-""
+ 
 
 `sudo nano /usr/local/hadoop/etc/hadoop/core-site.xml`
 
@@ -166,7 +166,7 @@ Add:
 
 xml
 
-""
+ 
 
 `<configuration>     <property>         <name>fs.defaultFS</name>         <value>hdfs://hadoop-master:9000</value>     </property>     <property>         <name>hadoop.tmp.dir</name>         <value>/usr/local/hadoop/tmp</value>     </property> </configuration>`
 
@@ -176,7 +176,7 @@ xml
 
 sh
 
-""
+ 
 
 `sudo nano /usr/local/hadoop/etc/hadoop/hdfs-site.xml`
 
@@ -184,7 +184,7 @@ Add:
 
 xml
 
-""
+ 
 
 `<configuration>     <property>         <name>dfs.replication</name>         <value>2</value>     </property>     <property>         <name>dfs.namenode.name.dir</name>         <value>file:///usr/local/hadoop/hdfs/namenode</value>     </property>     <property>         <name>dfs.datanode.data.dir</name>         <value>file:///usr/local/hadoop/hdfs/datanode</value>     </property> </configuration>`
 
@@ -194,7 +194,7 @@ xml
 
 sh
 
-""
+ 
 
 `sudo nano /usr/local/hadoop/etc/hadoop/yarn-site.xml`
 
@@ -250,7 +250,7 @@ Hive consists of several key components:
 
 sh
 
-""
+ 
 
 `gcloud compute ssh hadoop-master`
 
@@ -258,7 +258,7 @@ sh
 
 sh
 
-""
+ 
 
 `wget https://archive.apache.org/dist/hive/hive-3.1.3/apache-hive-3.1.3-bin.tar.gz`
 
@@ -266,7 +266,7 @@ sh
 
 sh
 
-""
+ 
 
 `tar -xvzf apache-hive-3.1.3-bin.tar.gz sudo mv apache-hive-3.1.3-bin /usr/local/hive`
 
@@ -278,7 +278,7 @@ sh
 
 sh
 
-""
+ 
 
 `nano ~/.bashrc`
 
@@ -286,7 +286,7 @@ sh
 
 sh
 
-""
+ 
 
 `export HIVE_HOME=/usr/local/hive export PATH=$PATH:$HIVE_HOME/bin`
 
@@ -294,7 +294,7 @@ sh
 
 sh
 
-""
+ 
 
 `source ~/.bashrc`
 
@@ -302,7 +302,7 @@ sh
 
 sh
 
-""
+ 
 
 `hive --version`
 
@@ -310,7 +310,7 @@ sh
 
 nginx
 
-""
+ 
 
 `Hive 3.1.3`
 
@@ -324,7 +324,7 @@ Hive **stores metadata** in the **Metastore Database**.
 
 sh
 
-""
+ 
 
 `sudo nano /usr/local/hive/conf/hive-site.xml`
 
@@ -332,7 +332,7 @@ sh
 
 xml
 
-""
+ 
 
 `<configuration>     <property>         <name>javax.jdo.option.ConnectionURL</name>         <value>jdbc:derby:;databaseName=/usr/local/hive/metastore_db;create=true</value>     </property>     <property>         <name>hive.metastore.warehouse.dir</name>         <value>/user/hive/warehouse</value>     </property> </configuration>`
 
@@ -340,7 +340,7 @@ xml
 
 sh
 
-""
+ 
 
 `source ~/.bashrc`
 
@@ -352,7 +352,7 @@ sh
 
 sh
 
-""
+ 
 
 `rm -r /usr/local/hive/metastore_db`
 
@@ -360,7 +360,7 @@ sh
 
 sh
 
-""
+ 
 
 `schematool -initSchema -dbType derby`
 
@@ -368,7 +368,7 @@ sh
 
 sh
 
-""
+ 
 
 `hive --service metastore &`
 
@@ -380,7 +380,7 @@ sh
 
 sh
 
-""
+ 
 
 `hdfs dfs -mkdir -p /user/hive/warehouse hdfs dfs -chmod g+w /user/hive/warehouse`
 
@@ -388,7 +388,7 @@ sh
 
 sh
 
-""
+ 
 
 `hdfs dfs -ls /user/hive/`
 
@@ -396,7 +396,7 @@ sh
 
 bash
 
-""
+ 
 
 `drwxr-xr-x - hive supergroup 0 2025-03-08  /user/hive/warehouse`
 
@@ -408,7 +408,7 @@ bash
 
 sh
 
-""
+ 
 
 `hive`
 
@@ -416,7 +416,7 @@ sh
 
 shell
 
-""
+ 
 
 `hive>`
 
@@ -424,7 +424,7 @@ shell
 
 sql
 
-""
+ 
 
 `SHOW DATABASES;`
 
@@ -432,7 +432,7 @@ sql
 
 cpp
 
-""
+ 
 
 `default`
 
@@ -457,7 +457,7 @@ cpp
 
 sql
 
-""
+ 
 
 `CREATE DATABASE hadoopdb;`
 
@@ -465,7 +465,7 @@ sql
 
 sql
 
-""
+ 
 
 `SHOW DATABASES;`
 
@@ -473,7 +473,7 @@ sql
 
 cpp
 
-""
+ 
 
 `default hadoopdb`
 
@@ -481,7 +481,7 @@ cpp
 
 sql
 
-""
+ 
 
 `USE hadoopdb;`
 
@@ -495,7 +495,7 @@ Hive tables store **structured data** inside HDFS.
 
 sql
 
-""
+ 
 
 `CREATE TABLE employees (     id INT,     name STRING,     department STRING,     salary FLOAT ) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE;`
 
@@ -505,7 +505,7 @@ sql
 
 sql
 
-""
+ 
 
 `SHOW TABLES;`
 
@@ -513,7 +513,7 @@ sql
 
 nginx
 
-""
+ 
 
 `employees`
 
@@ -521,7 +521,7 @@ nginx
 
 sql
 
-""
+ 
 
 `DESCRIBE employees;`
 
@@ -529,7 +529,7 @@ sql
 
 csharp
 
-""
+ 
 
 `id            int name          string department    string salary        float`
 
@@ -543,7 +543,7 @@ Run this command on `hadoop-master`:
 
 sh
 
-""
+ 
 
 `echo -e "1,John,Engineering,80000\n2,Alice,HR,75000\n3,Bob,Marketing,72000" > employees.txt`
 
@@ -551,7 +551,7 @@ sh
 
 sh
 
-""
+ 
 
 `hdfs dfs -mkdir -p /user/hive/warehouse/employees/ hdfs dfs -put employees.txt /user/hive/warehouse/employees/`
 
@@ -559,7 +559,7 @@ sh
 
 sql
 
-""
+ 
 
 `LOAD DATA INPATH '/user/hive/warehouse/employees/' INTO TABLE employees;`
 
@@ -567,13 +567,13 @@ sql
 
 sql
 
-""
+ 
 
 `SELECT * FROM employees;`
 
 ✅ Expected Output:
 
-""
+ 
 
 `1   John    Engineering   80000 2   Alice   HR            75000 3   Bob     Marketing     72000`
 
@@ -587,7 +587,7 @@ Hive supports **SQL-like queries** for data analysis.
 
 sql
 
-""
+ 
 
 `SELECT * FROM employees;`
 
@@ -595,13 +595,13 @@ sql
 
 sql
 
-""
+ 
 
 `SELECT * FROM employees WHERE salary > 75000;`
 
 ✅ Expected Output:
 
-""
+ 
 
 `1   John    Engineering   80000`
 
@@ -609,7 +609,7 @@ sql
 
 sql
 
-""
+ 
 
 `SELECT department, COUNT(*) FROM employees GROUP BY department;`
 
@@ -617,7 +617,7 @@ sql
 
 nginx
 
-""
+ 
 
 `Engineering   1 HR            1 Marketing     1`
 
@@ -625,7 +625,7 @@ nginx
 
 sql
 
-""
+ 
 
 `SELECT department, AVG(salary) FROM employees GROUP BY department;`
 
@@ -633,7 +633,7 @@ sql
 
 nginx
 
-""
+ 
 
 `Engineering   80000 HR            75000 Marketing     72000`
 
@@ -641,13 +641,13 @@ nginx
 
 sql
 
-""
+ 
 
 `SELECT * FROM employees ORDER BY salary DESC;`
 
 ✅ Expected Output:
 
-""
+ 
 
 `1   John    Engineering   80000 2   Alice   HR            75000 3   Bob     Marketing     72000`
 
@@ -661,7 +661,7 @@ Partitioning and bucketing **optimize performance** by reducing the data scanned
 
 sql
 
-""
+ 
 
 `CREATE TABLE employees_partitioned (     id INT,     name STRING,     salary FLOAT ) PARTITIONED BY (department STRING) STORED AS TEXTFILE;`
 
@@ -669,7 +669,7 @@ sql
 
 sql
 
-""
+ 
 
 `ALTER TABLE employees_partitioned ADD PARTITION (department='Engineering') LOCATION '/user/hive/warehouse/employees/engineering';`
 
@@ -677,7 +677,7 @@ sql
 
 sql
 
-""
+ 
 
 `SELECT * FROM employees_partitioned WHERE department='Engineering';`
 
@@ -691,7 +691,7 @@ sql
 
 sh
 
-""
+ 
 
 `sudo nano /usr/local/hive/conf/hive-site.xml`
 
@@ -699,7 +699,7 @@ Add:
 
 xml
 
-""
+ 
 
 `<property>     <name>hive.execution.engine</name>     <value>tez</value> </property>`
 
@@ -707,7 +707,7 @@ Restart Hive:
 
 sh
 
-""
+ 
 
 `exit hive`
 
@@ -715,7 +715,7 @@ sh
 
 sh
 
-""
+ 
 
 `sudo nano /usr/local/hive/conf/hive-site.xml`
 
@@ -723,7 +723,7 @@ Add:
 
 xml
 
-""
+ 
 
 `<property>     <name>hive.compute.query.using.stats</name>     <value>true</value> </property>`
 
@@ -731,7 +731,7 @@ Restart Hive:
 
 sh
 
-""
+ 
 
 `exit hive`
 
@@ -739,7 +739,7 @@ sh
 
 sh
 
-""
+ 
 
 `sudo nano /usr/local/hadoop/etc/hadoop/mapred-site.xml`
 
@@ -747,7 +747,7 @@ Add:
 
 xml
 
-""
+ 
 
 `<property>     <name>mapreduce.reduce.memory.mb</name>     <value>8192</value> </property>`
 
@@ -755,7 +755,7 @@ Restart Hadoop:
 
 sh
 
-""
+ 
 
 `stop-dfs.sh start-dfs.sh`
 
@@ -795,7 +795,7 @@ Since **HDFS** stores data across multiple nodes, optimizing it ensures **fast r
 
 sh
 
-""
+ 
 
 `sudo nano /usr/local/hadoop/etc/hadoop/hdfs-site.xml`
 
@@ -803,7 +803,7 @@ sh
 
 xml
 
-""
+ 
 
 `<property>     <name>dfs.blocksize</name>     <value>268435456</value>  <!-- 256MB block size --> </property>`
 
@@ -811,7 +811,7 @@ xml
 
 sh
 
-""
+ 
 
 `stop-dfs.sh start-dfs.sh`
 
@@ -825,7 +825,7 @@ sh
 
 xml
 
-""
+ 
 
 `<property>     <name>dfs.replication</name>     <value>3</value>  <!-- Default is 3 --> </property>`
 
@@ -833,7 +833,7 @@ xml
 
 sh
 
-""
+ 
 
 `stop-dfs.sh start-dfs.sh`
 
@@ -851,7 +851,7 @@ Since **YARN** manages computing resources, optimizing it ensures **efficient sc
 
 sh
 
-""
+ 
 
 `sudo nano /usr/local/hadoop/etc/hadoop/yarn-site.xml`
 
@@ -859,7 +859,7 @@ sh
 
 xml
 
-""
+ 
 
 `<property>     <name>yarn.nodemanager.resource.memory-mb</name>     <value>8192</value>  <!-- 8GB per node --> </property>  <property>     <name>yarn.scheduler.maximum-allocation-mb</name>     <value>8192</value> </property>  <property>     <name>yarn.scheduler.minimum-allocation-mb</name>     <value>1024</value>  <!-- Minimum 1GB per container --> </property>`
 
@@ -867,7 +867,7 @@ xml
 
 sh
 
-""
+ 
 
 `stop-yarn.sh start-yarn.sh`
 
@@ -881,7 +881,7 @@ sh
 
 xml
 
-""
+ 
 
 `<property>     <name>yarn.nodemanager.resource.cpu-vcores</name>     <value>4</value>  <!-- 4 cores per node --> </property>`
 
@@ -889,7 +889,7 @@ xml
 
 sh
 
-""
+ 
 
 `stop-yarn.sh start-yarn.sh`
 
@@ -907,7 +907,7 @@ Since **Hive translates SQL queries into MapReduce jobs**, optimizing it speeds 
 
 sh
 
-""
+ 
 
 `sudo nano /usr/local/hive/conf/hive-site.xml`
 
@@ -915,7 +915,7 @@ sh
 
 xml
 
-""
+ 
 
 `<property>     <name>hive.execution.engine</name>     <value>tez</value> </property>`
 
@@ -923,7 +923,7 @@ xml
 
 sh
 
-""
+ 
 
 `exit hive`
 
@@ -937,7 +937,7 @@ sh
 
 xml
 
-""
+ 
 
 `<property>     <name>hive.compute.query.using.stats</name>     <value>true</value> </property>`
 
@@ -945,7 +945,7 @@ xml
 
 sh
 
-""
+ 
 
 `exit hive`
 
@@ -959,7 +959,7 @@ sh
 
 sql
 
-""
+ 
 
 `CREATE TABLE employees_partitioned (     id INT,     name STRING,     salary FLOAT ) PARTITIONED BY (department STRING) STORED AS TEXTFILE;`
 
@@ -967,7 +967,7 @@ sql
 
 sql
 
-""
+ 
 
 `ALTER TABLE employees_partitioned ADD PARTITION (department='Engineering') LOCATION '/user/hive/warehouse/employees/engineering';`
 
@@ -975,7 +975,7 @@ sql
 
 sql
 
-""
+ 
 
 `SELECT * FROM employees_partitioned WHERE department='Engineering';`
 
@@ -993,7 +993,7 @@ sql
 
 sh
 
-""
+ 
 
 `sudo nano /usr/local/hadoop/etc/hadoop/mapred-site.xml`
 
@@ -1001,7 +1001,7 @@ sh
 
 xml
 
-""
+ 
 
 `<property>     <name>mapreduce.map.speculative</name>     <value>true</value> </property>  <property>     <name>mapreduce.reduce.speculative</name>     <value>true</value> </property>`
 
@@ -1009,7 +1009,7 @@ xml
 
 sh
 
-""
+ 
 
 `stop-dfs.sh start-dfs.sh`
 
@@ -1023,7 +1023,7 @@ sh
 
 sh
 
-""
+ 
 
 `sudo nano /usr/local/hadoop/etc/hadoop/core-site.xml`
 
@@ -1031,7 +1031,7 @@ sh
 
 xml
 
-""
+ 
 
 `<property>     <name>io.compression.codecs</name>     <value>org.apache.hadoop.io.compress.SnappyCodec</value> </property>`
 
@@ -1039,7 +1039,7 @@ xml
 
 sh
 
-""
+ 
 
 `stop-dfs.sh start-dfs.sh`
 
@@ -1063,7 +1063,7 @@ Add:
 
 xml
 
-""
+ 
 
 `<configuration>     <property>         <name>yarn.resourcemanager.hostname</name>         <value>hadoop-master</value>     </property>     <property>         <name>yarn.nodemanager.aux-services</name>         <value>mapreduce_shuffle</value>     </property> </configuration>`
 
@@ -1075,7 +1075,7 @@ If missing, **create `mapred-site.xml`**:
 
 sh
 
-""
+ 
 
 `sudo nano /usr/local/hadoop/etc/hadoop/mapred-site.xml`
 
@@ -1083,7 +1083,7 @@ Add:
 
 xml
 
-""
+ 
 
 `<configuration>     <property>         <name>mapreduce.framework.name</name>         <value>yarn</value>     </property>     <property>         <name>yarn.app.mapreduce.am.env</name>         <value>HADOOP_MAPRED_HOME=/usr/local/hadoop</value>     </property>     <property>         <name>mapreduce.map.env</name>         <value>HADOOP_MAPRED_HOME=/usr/local/hadoop</value>     </property>     <property>         <name>mapreduce.reduce.env</name>         <value>HADOOP_MAPRED_HOME=/usr/local/hadoop</value>     </property> </configuration>`
 
@@ -1095,13 +1095,13 @@ On the **master node (`hadoop-master`)**, edit:
 
 sh
 
-""
+ 
 
 `sudo nano /usr/local/hadoop/etc/hadoop/workers`
 
 Add:
 
-""
+ 
 
 `hadoop-worker-1 hadoop-worker-2`
 
@@ -1113,7 +1113,7 @@ On the **master node**, run:
 
 sh
 
-""
+ 
 
 `hdfs namenode -format`
 
@@ -1125,7 +1125,7 @@ On **the master node**, start all services:
 
 sh
 
-""
+ 
 
 `start-dfs.sh start-yarn.sh`
 
@@ -1133,7 +1133,7 @@ Verify:
 
 sh
 
-""
+ 
 
 `jps`
 
@@ -1141,7 +1141,7 @@ sh
 
 nginx
 
-""
+ 
 
 `NameNode SecondaryNameNode ResourceManager Jps`
 
@@ -1149,7 +1149,7 @@ nginx
 
 nginx
 
-""
+ 
 
 `DataNode NodeManager Jps`
 
@@ -1167,7 +1167,7 @@ This step was crucial because without setting `JAVA_HOME`, Hadoop services **wou
 
 sh
 
-""
+ 
 
 `sudo nano /usr/local/hadoop/etc/hadoop/hadoop-env.sh`
 
@@ -1175,7 +1175,7 @@ sh
 
 sh
 
-""
+ 
 
 `# export JAVA_HOME=`
 
@@ -1183,7 +1183,7 @@ sh
 
 sh
 
-""
+ 
 
 `export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64`
 
@@ -1191,7 +1191,7 @@ sh
 
 sh
 
-""
+ 
 
 `export HADOOP_MAPRED_HOME=/usr/local/hadoop`
 
@@ -1199,7 +1199,7 @@ sh
 
 sh
 
-""
+ 
 
 `export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64 export HADOOP_HOME=/usr/local/hadoop export HADOOP_MAPRED_HOME=$HADOOP_HOME export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop export YARN_CONF_DIR=$HADOOP_HOME/etc/hadoop`
 
@@ -1209,7 +1209,7 @@ sh
 
 sh
 
-""
+ 
 
 `source /usr/local/hadoop/etc/hadoop/hadoop-env.sh`
 
@@ -1217,7 +1217,7 @@ sh
 
 sh
 
-""
+ 
 
 `echo $JAVA_HOME echo $HADOOP_MAPRED_HOME`
 
@@ -1225,7 +1225,7 @@ sh
 
 swift
 
-""
+ 
 
 `/usr/lib/jvm/java-11-openjdk-amd64 /usr/local/hadoop`
 
@@ -1239,7 +1239,7 @@ After updating the environment settings, we restarted Hadoop services:
 
 sh
 
-""
+ 
 
 `stop-dfs.sh stop-yarn.sh`
 
@@ -1247,7 +1247,7 @@ sh
 
 sh
 
-""
+ 
 
 `start-dfs.sh start-yarn.sh`
 
@@ -1255,7 +1255,7 @@ sh
 
 sh
 
-""
+ 
 
 `jps`
 
@@ -1263,7 +1263,7 @@ sh
 
 nginx
 
-""
+ 
 
 `NameNode SecondaryNameNode ResourceManager Jps`
 
@@ -1271,7 +1271,7 @@ nginx
 
 nginx
 
-""
+ 
 
 `DataNode NodeManager Jps`
 
@@ -1296,7 +1296,7 @@ Before working with HDFS, we checked if our cluster was running properly.
 
 sh
 
-""
+ 
 
 `hdfs dfsadmin -report`
 
@@ -1316,7 +1316,7 @@ HDFS requires a **user directory** for storing files.
 
 sh
 
-""
+ 
 
 `hdfs dfs -mkdir /user hdfs dfs -mkdir /user/tejasjay94`
 
@@ -1324,7 +1324,7 @@ sh
 
 sh
 
-""
+ 
 
 `hdfs dfs -ls /user`
 
@@ -1332,7 +1332,7 @@ Expected Output:
 
 pgsql
 
-""
+ 
 
 `Found 1 items drwxr-xr-x - tejasjay94 supergroup 0 2025-03-08  /user/tejasjay94`
 
@@ -1346,7 +1346,7 @@ To store data in HDFS, we **upload local files**.
 
 sh
 
-""
+ 
 
 `echo "Hadoop is powerful. Hadoop is scalable. Hadoop is open-source." > input.txt`
 
@@ -1354,7 +1354,7 @@ sh
 
 sh
 
-""
+ 
 
 `hdfs dfs -put input.txt /user/tejasjay94/`
 
@@ -1362,7 +1362,7 @@ sh
 
 sh
 
-""
+ 
 
 `hdfs dfs -ls /user/tejasjay94/`
 
@@ -1370,7 +1370,7 @@ sh
 
 bash
 
-""
+ 
 
 `-rw-r--r--   1 tejasjay94 supergroup   58 2025-03-08  /user/tejasjay94/input.txt`
 
@@ -1382,7 +1382,7 @@ To check the content of an HDFS file:
 
 sh
 
-""
+ 
 
 `hdfs dfs -cat /user/tejasjay94/input.txt`
 
@@ -1390,7 +1390,7 @@ sh
 
 kotlin
 
-""
+ 
 
 `Hadoop is powerful. Hadoop is scalable. Hadoop is open-source.`
 
@@ -1402,7 +1402,7 @@ If we want to **copy a file from HDFS to our local system**, we use:
 
 sh
 
-""
+ 
 
 `hdfs dfs -get /user/tejasjay94/input.txt my_local_input.txt`
 
@@ -1410,7 +1410,7 @@ sh
 
 sh
 
-""
+ 
 
 `cat my_local_input.txt`
 
@@ -1418,7 +1418,7 @@ Expected Output:
 
 kotlin
 
-""
+ 
 
 `Hadoop is powerful. Hadoop is scalable. Hadoop is open-source.`
 
@@ -1430,7 +1430,7 @@ If we need to **remove a file** from HDFS:
 
 sh
 
-""
+ 
 
 `hdfs dfs -rm /user/tejasjay94/input.txt`
 
@@ -1438,7 +1438,7 @@ sh
 
 sh
 
-""
+ 
 
 `hdfs dfs -ls /user/tejasjay94/`
 
@@ -1452,7 +1452,7 @@ To remove an **entire directory**:
 
 sh
 
-""
+ 
 
 `hdfs dfs -rm -r /user/tejasjay94`
 
@@ -1504,7 +1504,7 @@ Before running MapReduce, we **create input data**.
 
 sh
 
-""
+ 
 
 `echo "Hadoop is powerful. Hadoop is scalable. Hadoop is open-source." > input.txt`
 
@@ -1512,7 +1512,7 @@ sh
 
 sh
 
-""
+ 
 
 `hdfs dfs -mkdir /user/tejasjay94/input hdfs dfs -put input.txt /user/tejasjay94/input/`
 
@@ -1520,7 +1520,7 @@ sh
 
 sh
 
-""
+ 
 
 `hdfs dfs -ls /user/tejasjay94/input/`
 
@@ -1528,7 +1528,7 @@ sh
 
 css
 
-""
+ 
 
 `-rw-r--r--   1 tejasjay94 supergroup   58 2025-03-08  /user/tejasjay94/input/input.txt`
 
@@ -1542,7 +1542,7 @@ css
 
     sh
 
-    ""
+     
 
     `nano mapper.py`
 
@@ -1550,7 +1550,7 @@ css
 
     python
 
-    ""
+     
 
     `#!/usr/bin/env python3 import sys  # Read input from standard input for line in sys.stdin:     words = line.strip().split()     for word in words:         print(f"{word}\t1")  # Output: word <TAB> count`
 
@@ -1563,7 +1563,7 @@ css
 
     sh
 
-    ""
+     
 
     `nano reducer.py`
 
@@ -1571,7 +1571,7 @@ css
 
     python
 
-    ""
+     
 
     `#!/usr/bin/env python3 import sys  current_word = None current_count = 0  for line in sys.stdin:     word, count = line.strip().split("\t")     count = int(count)      if word == current_word:         current_count += count     else:         if current_word:             print(f"{current_word}\t{current_count}")  # Print previous word count         current_word = word         current_count = count  # Print the last word count if current_word:     print(f"{current_word}\t{current_count}")`
 
@@ -1582,7 +1582,7 @@ css
 
 sh
 
-""
+ 
 
 `chmod +x mapper.py reducer.py`
 
@@ -1596,7 +1596,7 @@ Now, we run the **MapReduce job using Hadoop Streaming API**.
 
 sh
 
-""
+ 
 
 `hadoop jar /usr/local/hadoop/share/hadoop/tools/lib/hadoop-streaming-3.3.6.jar \   -input /user/tejasjay94/input/input.txt \   -output /user/tejasjay94/output \   -mapper mapper.py \   -reducer reducer.py \   -file mapper.py \   -file reducer.py`
 
@@ -1615,7 +1615,7 @@ sh
 
 sh
 
-""
+ 
 
 `hdfs dfs -ls /user/tejasjay94/output/`
 
@@ -1623,7 +1623,7 @@ sh
 
 bash
 
-""
+ 
 
 `-rw-r--r--   1 tejasjay94 supergroup         0 2025-03-08  /user/tejasjay94/output/_SUCCESS -rw-r--r--   1 tejasjay94 supergroup        58 2025-03-08  /user/tejasjay94/output/part-00000`
 
@@ -1635,7 +1635,7 @@ bash
 
 sh
 
-""
+ 
 
 `hdfs dfs -cat /user/tejasjay94/output/part-00000`
 
@@ -1643,7 +1643,7 @@ sh
 
 kotlin
 
-""
+ 
 
 `Hadoop    3 is        3 open-source. 1 powerful. 1 scalable. 1`
 
