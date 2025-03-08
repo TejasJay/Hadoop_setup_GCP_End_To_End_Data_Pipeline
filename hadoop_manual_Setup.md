@@ -416,3 +416,378 @@ CopyEdit
 
 * * *
 
+### **📌 Step 5: Running HDFS Commands (Working with the Hadoop File System)**
+
+After setting up the Hadoop environment, the next step was to **store and manage files in HDFS (Hadoop Distributed File System)**.
+
+#### **Why Use HDFS?**
+
+-   Stores **large-scale** data efficiently across multiple nodes.
+-   Provides **fault tolerance** (data is replicated across nodes).
+-   Can handle **high-throughput access** for large files.
+* * *
+
+## **🛠 Step 5.1: Verify HDFS is Running**
+
+Before working with HDFS, we checked if our cluster was running properly.
+
+1️⃣ **Run this command on the master node (`hadoop-master`)**:
+
+sh
+
+CopyEdit
+
+`hdfs dfsadmin -report`
+
+✅ **Expected Output:**
+
+-   Lists **all active DataNodes** (`hadoop-worker-1`, `hadoop-worker-2`).
+-   Shows total **storage capacity and usage**.
+* * *
+
+## **🛠 Step 5.2: Basic HDFS Operations**
+
+Now, we ran **basic HDFS commands** to interact with the file system.
+
+### **1️⃣ Create a Directory in HDFS**
+
+HDFS requires a **user directory** for storing files.
+
+sh
+
+CopyEdit
+
+`hdfs dfs -mkdir /user hdfs dfs -mkdir /user/tejasjay94`
+
+✅ **Verify the directory exists:**
+
+sh
+
+CopyEdit
+
+`hdfs dfs -ls /user`
+
+Expected Output:
+
+pgsql
+
+CopyEdit
+
+`Found 1 items drwxr-xr-x - tejasjay94 supergroup 0 2025-03-08  /user/tejasjay94`
+
+* * *
+
+### **2️⃣ Upload Files to HDFS**
+
+To store data in HDFS, we **upload local files**.
+
+1️⃣ **Create a sample text file locally:**
+
+sh
+
+CopyEdit
+
+`echo "Hadoop is powerful. Hadoop is scalable. Hadoop is open-source." > input.txt`
+
+2️⃣ **Upload the file to HDFS:**
+
+sh
+
+CopyEdit
+
+`hdfs dfs -put input.txt /user/tejasjay94/`
+
+3️⃣ **Verify that the file is uploaded:**
+
+sh
+
+CopyEdit
+
+`hdfs dfs -ls /user/tejasjay94/`
+
+✅ Expected Output:
+
+bash
+
+CopyEdit
+
+`-rw-r--r--   1 tejasjay94 supergroup   58 2025-03-08  /user/tejasjay94/input.txt`
+
+* * *
+
+### **3️⃣ Read a File from HDFS**
+
+To check the content of an HDFS file:
+
+sh
+
+CopyEdit
+
+`hdfs dfs -cat /user/tejasjay94/input.txt`
+
+✅ Expected Output:
+
+kotlin
+
+CopyEdit
+
+`Hadoop is powerful. Hadoop is scalable. Hadoop is open-source.`
+
+* * *
+
+### **4️⃣ Download (Retrieve) a File from HDFS**
+
+If we want to **copy a file from HDFS to our local system**, we use:
+
+sh
+
+CopyEdit
+
+`hdfs dfs -get /user/tejasjay94/input.txt my_local_input.txt`
+
+✅ **Verify:**
+
+sh
+
+CopyEdit
+
+`cat my_local_input.txt`
+
+Expected Output:
+
+kotlin
+
+CopyEdit
+
+`Hadoop is powerful. Hadoop is scalable. Hadoop is open-source.`
+
+* * *
+
+### **5️⃣ Delete a File from HDFS**
+
+If we need to **remove a file** from HDFS:
+
+sh
+
+CopyEdit
+
+`hdfs dfs -rm /user/tejasjay94/input.txt`
+
+✅ **Verify:**
+
+sh
+
+CopyEdit
+
+`hdfs dfs -ls /user/tejasjay94/`
+
+✅ Expected Output: The file should be **gone**.
+
+* * *
+
+### **6️⃣ Delete a Directory from HDFS**
+
+To remove an **entire directory**:
+
+sh
+
+CopyEdit
+
+`hdfs dfs -rm -r /user/tejasjay94`
+
+✅ **This deletes the directory and all its files**.
+
+* * *
+
+## **🛠 Step 5.3: Summary of HDFS Commands**
+
+| Command | Description |
+| --- | --- |
+| `hdfs dfs -ls /` | List files/directories in HDFS |
+| `hdfs dfs -mkdir /path` | Create a new directory in HDFS |
+| `hdfs dfs -put localfile /path` | Upload a file to HDFS |
+| `hdfs dfs -cat /path/file.txt` | Read file contents from HDFS |
+| `hdfs dfs -get /path/file.txt localfile` | Download a file from HDFS |
+| `hdfs dfs -rm /path/file.txt` | Delete a file from HDFS |
+| `hdfs dfs -rm -r /path` | Delete a directory from HDFS |
+
+* * *
+
+### **📌 Step 6: Running a Python-Based MapReduce Job in Hadoop**
+
+Now that we have **HDFS set up**, it's time to process data using **MapReduce**.
+We will implement a **Word Count program** using Python.
+
+* * *
+
+## **🛠 Step 6.1: Understanding MapReduce**
+
+MapReduce **processes big data in parallel** by splitting tasks across multiple nodes.
+
+1️⃣ **Mapper**
+
+-   Reads input data **line by line**.
+-   Emits **key-value pairs (word → count)**.
+
+2️⃣ **Reducer**
+
+-   Aggregates key-value pairs.
+-   Produces the **final count** for each word.
+* * *
+
+## **🛠 Step 6.2: Prepare Input Data**
+
+Before running MapReduce, we **create input data**.
+
+1️⃣ **Create a text file on the master node (`hadoop-master`)**:
+
+sh
+
+CopyEdit
+
+`echo "Hadoop is powerful. Hadoop is scalable. Hadoop is open-source." > input.txt`
+
+2️⃣ **Upload the file to HDFS:**
+
+sh
+
+CopyEdit
+
+`hdfs dfs -mkdir /user/tejasjay94/input hdfs dfs -put input.txt /user/tejasjay94/input/`
+
+3️⃣ **Verify the file in HDFS:**
+
+sh
+
+CopyEdit
+
+`hdfs dfs -ls /user/tejasjay94/input/`
+
+✅ Expected Output:
+
+css
+
+CopyEdit
+
+`-rw-r--r--   1 tejasjay94 supergroup   58 2025-03-08  /user/tejasjay94/input/input.txt`
+
+* * *
+
+## **🛠 Step 6.3: Write the Python MapReduce Code**
+
+### **1️⃣ Create `mapper.py` (Word Count Mapper)**
+
+1.  Open a new file:
+
+    sh
+
+    CopyEdit
+
+    `nano mapper.py`
+
+2.  Paste this Python code:
+
+    python
+
+    CopyEdit
+
+    `#!/usr/bin/env python3 import sys  # Read input from standard input for line in sys.stdin:     words = line.strip().split()     for word in words:         print(f"{word}\t1")  # Output: word <TAB> count`
+
+3.  **Save and exit** (`CTRL+X → Y → ENTER`).
+* * *
+
+### **2️⃣ Create `reducer.py` (Word Count Reducer)**
+
+1.  Open a new file:
+
+    sh
+
+    CopyEdit
+
+    `nano reducer.py`
+
+2.  Paste this Python code:
+
+    python
+
+    CopyEdit
+
+    `#!/usr/bin/env python3 import sys  current_word = None current_count = 0  for line in sys.stdin:     word, count = line.strip().split("\t")     count = int(count)      if word == current_word:         current_count += count     else:         if current_word:             print(f"{current_word}\t{current_count}")  # Print previous word count         current_word = word         current_count = count  # Print the last word count if current_word:     print(f"{current_word}\t{current_count}")`
+
+3.  **Save and exit** (`CTRL+X → Y → ENTER`).
+* * *
+
+### **3️⃣ Make Python Scripts Executable**
+
+sh
+
+CopyEdit
+
+`chmod +x mapper.py reducer.py`
+
+* * *
+
+## **🛠 Step 6.4: Run the MapReduce Job in Hadoop**
+
+Now, we run the **MapReduce job using Hadoop Streaming API**.
+
+### **Submit the Job**
+
+sh
+
+CopyEdit
+
+`hadoop jar /usr/local/hadoop/share/hadoop/tools/lib/hadoop-streaming-3.3.6.jar \   -input /user/tejasjay94/input/input.txt \   -output /user/tejasjay94/output \   -mapper mapper.py \   -reducer reducer.py \   -file mapper.py \   -file reducer.py`
+
+✅ **Explanation of the Command:**
+
+-   `-input` → Input file location in HDFS.
+-   `-output` → Output directory in HDFS.
+-   `-mapper` → Specifies the **Python mapper script**.
+-   `-reducer` → Specifies the **Python reducer script**.
+-   `-file` → Uploads Python scripts to Hadoop.
+* * *
+
+## **🛠 Step 6.5: Check the Output**
+
+1️⃣ **List the output directory in HDFS**:
+
+sh
+
+CopyEdit
+
+`hdfs dfs -ls /user/tejasjay94/output/`
+
+✅ Expected Output:
+
+bash
+
+CopyEdit
+
+`-rw-r--r--   1 tejasjay94 supergroup         0 2025-03-08  /user/tejasjay94/output/_SUCCESS -rw-r--r--   1 tejasjay94 supergroup        58 2025-03-08  /user/tejasjay94/output/part-00000`
+
+👉 `_SUCCESS` file means the job ran successfully.
+
+* * *
+
+2️⃣ **View the word count results:**
+
+sh
+
+CopyEdit
+
+`hdfs dfs -cat /user/tejasjay94/output/part-00000`
+
+✅ Expected Output:
+
+kotlin
+
+CopyEdit
+
+`Hadoop    3 is        3 open-source. 1 powerful. 1 scalable. 1`
+
+* * *
+
+
+
+
