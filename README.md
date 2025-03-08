@@ -1,5 +1,3 @@
-### **📌 GitHub Summary: NYC Taxi Data Pipeline (Automated with Hadoop & Hive)**
-
 📌 **An automated data pipeline for processing NYC Taxi monthly reports using Hadoop, Hive, and HDFS.**
 ✔ **CSV ingestion from NYC Open Data**
 ✔ **Data storage in HDFS**
