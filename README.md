@@ -258,21 +258,3 @@ echo "Pipeline failed" | sendmail tejastj33333@gmail.com
 
 * * *
 
-## **📜 Future Improvements**
-
-🔹 Use **Apache Spark** for faster data processing
-🔹 Integrate **Grafana/Tableau** for real-time visualization
-🔹 Add **Airflow** for better job scheduling
-
-* * *
-
-## **👨‍💻 Contributing**
-
-**Want to improve this pipeline?**
-🔹 **Fork & clone** this repo
-🔹 Submit **PRs** for feature improvements
-🔹 Open **issues** for bug reports
-
-* * *
-
-🚀 **This is now GitHub-ready!** Let me know if you need modifications! 🎯
