@@ -1,1654 +1,600 @@
-### **📌 Hadoop Cluster Setup on Google Cloud Platform (GCP) - Step-by-Step Notes**
+## **📌 Full Hadoop & Hive Setup Notes**
 
-Below is a **detailed breakdown** of everything we did to **set up Hadoop on GCP** from scratch. Since this is long, I will split it into **multiple responses**.
+This document contains **detailed step-by-step notes** explaining **everything we did today**, covering:
+✔ **Hadoop installation & setup**
+✔ **Configuring HDFS & YARN**
+✔ **Hive installation & setup**
+✔ **Query execution & data ingestion**
+✔ **Full automation of the pipeline**
 
-* * *
-
-## **🛠 Step 1: Understanding Hadoop & GCP Setup**
-
-### **1.1 What is Hadoop?**
-
-Hadoop is an **open-source framework** that enables distributed processing of large datasets across clusters of computers. It consists of:
-✔ **HDFS (Hadoop Distributed File System)** – Storage Layer
-✔ **MapReduce** – Data Processing Engine
-✔ **YARN (Yet Another Resource Negotiator)** – Resource Manager
-✔ **Apache Hive (SQL on Hadoop)** – Query Engine
-✔ **Apache HBase (NoSQL on Hadoop)** – Database
 
 * * *
 
-### **1.2 Setting Up Virtual Machines on GCP**
+# **🚀 Part 1: Hadoop Installation & Setup**
 
-To run a Hadoop cluster, we created three **Compute Engine instances**:
-🔹 **hadoop-master** → Runs NameNode, ResourceManager, and SecondaryNameNode
-🔹 **hadoop-worker-1** → Runs DataNode and NodeManager
-🔹 **hadoop-worker-2** → Runs DataNode and NodeManager
+Hadoop is the **core framework** that allows us to store and process **large-scale data** using a distributed system.
 
-#### **1️⃣ Create Master Node**
-
-1.  **Go to** Google Cloud Console.
-2.  Navigate to **Compute Engine → VM Instances → Create Instance**.
-3.  **Set the following configuration**:
-    -   Name: `hadoop-master`
-    -   Machine Type: `e2-standard-2` (2 vCPUs, 8GB RAM)
-    -   OS Image: `Ubuntu 22.04 LTS`
-    -   Boot Disk: `50GB`
-    -   Allow HTTP/HTTPS traffic
-4.  Click **Create**.
-
-#### **2️⃣ Create Worker Nodes**
-
-1.  **Repeat the same process** for `hadoop-worker-1` and `hadoop-worker-2`:
-    -   Use the same **machine type** and **OS image**.
-    -   Set the **names** as `hadoop-worker-1` and `hadoop-worker-2`.
-2.  Click **Create**.
 * * *
 
-### **1.3 SSH Into the Master Node**
+## **🛠 Step 1: Install Hadoop on the Master Node**
 
-To install and configure Hadoop, SSH into the master node:
+### **1️⃣ SSH into the Hadoop Master Node**
 
 sh
 
- 
+CopyEdit
 
 `gcloud compute ssh hadoop-master`
 
-* * *
-
-## **🛠 Step 2: Installing Java and Hadoop**
-
-### **2.1 Install Java (Required for Hadoop)**
-
-On **each node (master + workers)**, install Java:
+### **2️⃣ Download & Install Hadoop**
 
 sh
 
- 
-
-`sudo apt update sudo apt install openjdk-11-jdk -y`
-
-Verify:
-
-sh
-
- 
-
-`java -version`
-
-✅ Expected Output:
-
-nginx
-
- 
-
-`openjdk version "11.0.x"`
-
-* * *
-
-### **2.2 Download and Install Hadoop**
-
-On **each node (master + workers)**:
-
-1️⃣ **Download Hadoop**:
-
-sh
-
- 
+CopyEdit
 
 `wget https://downloads.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz`
 
-2️⃣ **Extract and move to `/usr/local/`**:
+✔ This command downloads **Hadoop version 3.3.6**.
+
+### **3️⃣ Extract & Move Hadoop**
 
 sh
 
- 
+CopyEdit
 
 `tar -xvzf hadoop-3.3.6.tar.gz sudo mv hadoop-3.3.6 /usr/local/hadoop`
 
+✔ **Extracts the Hadoop package and moves it** to `/usr/local/hadoop`.
+
 * * *
 
-### **2.3 Set Environment Variables**
+## **🛠 Step 2: Configure Hadoop Environment Variables**
 
-On **each node (master + workers)**:
+We need to set up **Hadoop paths** so it can be accessed system-wide.
 
-1️⃣ **Edit `.bashrc`:**
+### **1️⃣ Edit `.bashrc` File**
 
 sh
 
- 
+CopyEdit
 
 `nano ~/.bashrc`
 
-2️⃣ **Add these lines at the bottom**:
+### **2️⃣ Add the Following Environment Variables**
 
 sh
 
- 
+CopyEdit
 
-`export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64 export HADOOP_HOME=/usr/local/hadoop export HADOOP_MAPRED_HOME=$HADOOP_HOME export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop export YARN_CONF_DIR=$HADOOP_HOME/etc/hadoop`
+`export HADOOP_HOME=/usr/local/hadoop export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop export YARN_CONF_DIR=$HADOOP_HOME/etc/hadoop export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64`
 
-3️⃣ **Save and apply changes**:
+✔ **Defines paths for Hadoop and Java**.
+
+### **3️⃣ Apply Changes**
 
 sh
 
- 
+CopyEdit
 
 `source ~/.bashrc`
 
-4️⃣ **Verify that Hadoop is recognized**:
-
-sh
-
- 
-
-`hadoop version`
-
-✅ Expected Output: Hadoop version details.
+✔ Ensures the new environment variables are active.
 
 * * *
 
-## **🛠 Step 3: Configuring Hadoop (HDFS, YARN, MapReduce)**
+## **🛠 Step 3: Configure Hadoop Core Settings**
 
-### **3.1 Update Configuration Files**
+Hadoop requires multiple configuration changes.
 
-On **each node (master + workers)**:
-
-#### **1️⃣ Configure `core-site.xml` (HDFS Settings)**
+### **1️⃣ Edit `core-site.xml`**
 
 sh
 
- 
+CopyEdit
 
-`sudo nano /usr/local/hadoop/etc/hadoop/core-site.xml`
+`nano /usr/local/hadoop/etc/hadoop/core-site.xml`
 
-Add:
+🔹 **Update the following properties:**
 
 xml
 
- 
+CopyEdit
 
-`<configuration>     <property>         <name>fs.defaultFS</name>         <value>hdfs://hadoop-master:9000</value>     </property>     <property>         <name>hadoop.tmp.dir</name>         <value>/usr/local/hadoop/tmp</value>     </property> </configuration>`
+`<configuration>     <property>         <name>fs.defaultFS</name>         <value>hdfs://hadoop-master:9000</value>     </property> </configuration>`
+
+✔ **Defines Hadoop’s filesystem (HDFS) URL**.
 
 * * *
 
-#### **2️⃣ Configure `hdfs-site.xml` (HDFS Storage Settings)**
+### **2️⃣ Edit `hdfs-site.xml` (HDFS Configuration)**
 
 sh
 
- 
+CopyEdit
 
-`sudo nano /usr/local/hadoop/etc/hadoop/hdfs-site.xml`
+`nano /usr/local/hadoop/etc/hadoop/hdfs-site.xml`
 
-Add:
+🔹 **Add replication and block size settings:**
 
 xml
 
- 
+CopyEdit
 
-`<configuration>     <property>         <name>dfs.replication</name>         <value>2</value>     </property>     <property>         <name>dfs.namenode.name.dir</name>         <value>file:///usr/local/hadoop/hdfs/namenode</value>     </property>     <property>         <name>dfs.datanode.data.dir</name>         <value>file:///usr/local/hadoop/hdfs/datanode</value>     </property> </configuration>`
+`<configuration>     <property>         <name>dfs.replication</name>         <value>3</value>  <!-- Ensures data is replicated on multiple nodes -->     </property>     <property>         <name>dfs.blocksize</name>         <value>268435456</value>  <!-- 256MB Block Size -->     </property> </configuration>`
 
-* * *
-
-#### **3️⃣ Configure `yarn-site.xml` (YARN Resource Manager)**
-
-sh
-
- 
-
-`sudo nano /usr/local/hadoop/etc/hadoop/yarn-site.xml`
-
-
-### **📌 Detailed Notes: Apache Hive Setup, Queries, and Optimization**
-
-Here are **comprehensive notes** covering everything you have learned so far about Hive. Since this will be detailed, I'll split it into multiple responses.
+✔ **Configures how Hadoop distributes and stores data.**
 
 * * *
 
-# **📖 Part 1: Apache Hive Overview & Installation**
+### **3️⃣ Edit `yarn-site.xml` (YARN Configuration)**
 
-## **🛠 What is Apache Hive?**
+sh
 
-Apache Hive is a **data warehouse system** built on Hadoop that allows you to:
-✔ Run **SQL-like queries** on large datasets stored in HDFS
-✔ Convert **HiveQL (SQL queries) into MapReduce jobs**
-✔ Store **structured and semi-structured data**
-✔ Support **batch processing and analytics**
+CopyEdit
+
+`nano /usr/local/hadoop/etc/hadoop/yarn-site.xml`
+
+🔹 **Update the following properties:**
+
+xml
+
+CopyEdit
+
+`<configuration>     <property>         <name>yarn.nodemanager.resource.memory-mb</name>         <value>8192</value>     </property>     <property>         <name>yarn.scheduler.minimum-allocation-mb</name>         <value>1024</value>     </property>     <property>         <name>yarn.scheduler.maximum-allocation-mb</name>         <value>8192</value>     </property> </configuration>`
+
+✔ **Allocates memory for YARN (Job Scheduler)**.
 
 * * *
 
-## **🛠 Hive vs. Traditional Databases**
+## **🛠 Step 4: Configure Worker Nodes**
 
-| Feature | Hive (Hadoop) | Traditional RDBMS |
-| --- | --- | --- |
-| Query Language | HiveQL (SQL-like) | SQL |
-| Storage | HDFS (Distributed) | Local Disk |
-| Execution | Converts queries to MapReduce/Tez | Direct execution |
-| Schema | Schema-on-Read | Schema-on-Write |
-| Optimized For | Batch Processing & Big Data | Transactions & OLTP |
+Worker nodes execute the actual **MapReduce tasks**.
 
-👉 **Hive is NOT meant for real-time transactional processing.** It is best used for **data analysis and reporting**.
-
-* * *
-
-## **🛠 Hive Architecture**
-
-Hive consists of several key components:
-
-✔ **Hive Metastore** → Stores metadata (table schemas, partitions, locations)
-✔ **Driver** → Compiles, optimizes, and executes queries
-✔ **Execution Engine** → Converts SQL into MapReduce or Tez jobs
-✔ **HDFS Storage** → Stores structured data in a distributed fashion
-
-* * *
-
-# **📌 Part 2: Installing and Configuring Hive**
-
-## **🛠 Step 1: Download and Install Hive**
-
-1️⃣ **SSH into Hadoop Master Node**
+### **1️⃣ Edit the `workers` File**
 
 sh
 
- 
+CopyEdit
 
-`gcloud compute ssh hadoop-master`
+`nano /usr/local/hadoop/etc/hadoop/workers`
 
-2️⃣ **Download Apache Hive (3.1.3)**
-
-sh
-
- 
-
-`wget https://archive.apache.org/dist/hive/hive-3.1.3/apache-hive-3.1.3-bin.tar.gz`
-
-3️⃣ **Extract Hive and Move to `/usr/local/`**
-
-sh
-
- 
-
-`tar -xvzf apache-hive-3.1.3-bin.tar.gz sudo mv apache-hive-3.1.3-bin /usr/local/hive`
-
-* * *
-
-## **🛠 Step 2: Set Hive Environment Variables**
-
-1️⃣ **Edit `.bashrc`**
-
-sh
-
- 
-
-`nano ~/.bashrc`
-
-2️⃣ **Add the following lines**
-
-sh
-
- 
-
-`export HIVE_HOME=/usr/local/hive export PATH=$PATH:$HIVE_HOME/bin`
-
-3️⃣ **Apply changes**
-
-sh
-
- 
-
-`source ~/.bashrc`
-
-4️⃣ **Verify Hive Installation**
-
-sh
-
- 
-
-`hive --version`
-
-✅ Expected Output:
+🔹 **Add the following worker node hostnames:**
 
 nginx
 
- 
+CopyEdit
 
-`Hive 3.1.3`
+`localhost hadoop-worker-1 hadoop-worker-2`
 
-* * *
-
-## **🛠 Step 3: Configure Hive Metastore**
-
-Hive **stores metadata** in the **Metastore Database**.
-
-1️⃣ **Edit `hive-site.xml`**
-
-sh
-
- 
-
-`sudo nano /usr/local/hive/conf/hive-site.xml`
-
-2️⃣ **Add the following configuration**
-
-xml
-
- 
-
-`<configuration>     <property>         <name>javax.jdo.option.ConnectionURL</name>         <value>jdbc:derby:;databaseName=/usr/local/hive/metastore_db;create=true</value>     </property>     <property>         <name>hive.metastore.warehouse.dir</name>         <value>/user/hive/warehouse</value>     </property> </configuration>`
-
-3️⃣ **Save and apply changes**
-
-sh
-
- 
-
-`source ~/.bashrc`
+✔ **Defines the worker nodes participating in the Hadoop cluster**.
 
 * * *
 
-## **🛠 Step 4: Initialize Hive Metastore**
+## **🛠 Step 5: Set Up SSH Access Between Nodes**
 
-1️⃣ **Delete any existing Metastore (if reinitializing)**
+Hadoop needs **password-less SSH access** to communicate between nodes.
 
-sh
-
- 
-
-`rm -r /usr/local/hive/metastore_db`
-
-2️⃣ **Run Hive Schema Initialization**
+### **1️⃣ Generate SSH Keys**
 
 sh
 
- 
+CopyEdit
 
-`schematool -initSchema -dbType derby`
+`ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa`
 
-3️⃣ **Start Hive Metastore**
+✔ **Creates an SSH key without a passphrase**.
+
+### **2️⃣ Copy SSH Key to Worker Nodes**
 
 sh
 
- 
+CopyEdit
 
-`hive --service metastore &`
+`ssh-copy-id tejasjay94@hadoop-worker-1 ssh-copy-id tejasjay94@hadoop-worker-2`
+
+✔ **Allows the master node to SSH into worker nodes without a password**.
 
 * * *
 
-## **🛠 Step 5: Create Hive Warehouse in HDFS**
+## **🛠 Step 6: Format the Hadoop Filesystem**
 
-1️⃣ **Create the Hive directory in HDFS**
-
-sh
-
- 
-
-`hdfs dfs -mkdir -p /user/hive/warehouse hdfs dfs -chmod g+w /user/hive/warehouse`
-
-2️⃣ **Verify**
+HDFS must be formatted before first use.
 
 sh
 
- 
-
-`hdfs dfs -ls /user/hive/`
-
-✅ Expected Output:
-
-bash
-
- 
-
-`drwxr-xr-x - hive supergroup 0 2025-03-08  /user/hive/warehouse`
-
-* * *
-
-## **🛠 Step 6: Start Hive**
-
-1️⃣ **Start Hive CLI**
-
-sh
-
- 
-
-`hive`
-
-✅ Expected Output:
-
-shell
-
- 
-
-`hive>`
-
-2️⃣ **Check available databases**
-
-sql
-
- 
-
-`SHOW DATABASES;`
-
-✅ Expected Output:
-
-cpp
-
- 
-
-`default`
-
-* * *
-
-## **✅ Hive Setup Summary**
-
-| Step | Description |
-| --- | --- |
-| Install Hive | Download and extract Hive 3.1.3 |
-| Set Environment Variables | Add `HIVE_HOME` and update `PATH` |
-| Configure Hive Metastore | Set up `hive-site.xml` with Derby database |
-| Initialize Hive Metastore | Run `schematool -initSchema -dbType derby` |
-| Start Hive | Run `hive --service metastore` and enter `hive` CLI |
-| Verify Setup | Run `SHOW DATABASES;` |
-
-* * *
-
-# **🛠 Step 1: Creating Databases in Hive**
-
-### **1️⃣ Create a New Database**
-
-sql
-
- 
-
-`CREATE DATABASE hadoopdb;`
-
-### **2️⃣ View Available Databases**
-
-sql
-
- 
-
-`SHOW DATABASES;`
-
-✅ Expected Output:
-
-cpp
-
- 
-
-`default hadoopdb`
-
-### **3️⃣ Use a Specific Database**
-
-sql
-
- 
-
-`USE hadoopdb;`
-
-* * *
-
-# **🛠 Step 2: Creating Tables in Hive**
-
-Hive tables store **structured data** inside HDFS.
-
-### **1️⃣ Create a Simple Table**
-
-sql
-
- 
-
-`CREATE TABLE employees (     id INT,     name STRING,     department STRING,     salary FLOAT ) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE;`
-
-✅ This table is now stored in HDFS.
-
-### **2️⃣ Check Available Tables**
-
-sql
-
- 
-
-`SHOW TABLES;`
-
-✅ Expected Output:
-
-nginx
-
- 
-
-`employees`
-
-### **3️⃣ View Table Schema**
-
-sql
-
- 
-
-`DESCRIBE employees;`
-
-✅ Expected Output:
-
-csharp
-
- 
-
-`id            int name          string department    string salary        float`
-
-* * *
-
-# **🛠 Step 3: Loading Data into Hive Tables**
-
-### **1️⃣ Create Sample Employee Data**
-
-Run this command on `hadoop-master`:
-
-sh
-
- 
-
-`echo -e "1,John,Engineering,80000\n2,Alice,HR,75000\n3,Bob,Marketing,72000" > employees.txt`
-
-### **2️⃣ Upload Data to HDFS**
-
-sh
-
- 
-
-`hdfs dfs -mkdir -p /user/hive/warehouse/employees/ hdfs dfs -put employees.txt /user/hive/warehouse/employees/`
-
-### **3️⃣ Load Data into Hive Table**
-
-sql
-
- 
-
-`LOAD DATA INPATH '/user/hive/warehouse/employees/' INTO TABLE employees;`
-
-### **4️⃣ Verify the Data**
-
-sql
-
- 
-
-`SELECT * FROM employees;`
-
-✅ Expected Output:
-
- 
-
-`1   John    Engineering   80000 2   Alice   HR            75000 3   Bob     Marketing     72000`
-
-* * *
-
-# **🛠 Step 4: Running SQL Queries on Hive Data**
-
-Hive supports **SQL-like queries** for data analysis.
-
-### **1️⃣ Retrieve All Employees**
-
-sql
-
- 
-
-`SELECT * FROM employees;`
-
-### **2️⃣ Filter Employees by Salary**
-
-sql
-
- 
-
-`SELECT * FROM employees WHERE salary > 75000;`
-
-✅ Expected Output:
-
- 
-
-`1   John    Engineering   80000`
-
-### **3️⃣ Count Employees per Department**
-
-sql
-
- 
-
-`SELECT department, COUNT(*) FROM employees GROUP BY department;`
-
-✅ Expected Output:
-
-nginx
-
- 
-
-`Engineering   1 HR            1 Marketing     1`
-
-### **4️⃣ Find Average Salary per Department**
-
-sql
-
- 
-
-`SELECT department, AVG(salary) FROM employees GROUP BY department;`
-
-✅ Expected Output:
-
-nginx
-
- 
-
-`Engineering   80000 HR            75000 Marketing     72000`
-
-### **5️⃣ Order Employees by Salary**
-
-sql
-
- 
-
-`SELECT * FROM employees ORDER BY salary DESC;`
-
-✅ Expected Output:
-
- 
-
-`1   John    Engineering   80000 2   Alice   HR            75000 3   Bob     Marketing     72000`
-
-* * *
-
-# **🛠 Step 5: Partitioning & Bucketing for Faster Queries**
-
-Partitioning and bucketing **optimize performance** by reducing the data scanned.
-
-### **1️⃣ Create a Partitioned Table**
-
-sql
-
- 
-
-`CREATE TABLE employees_partitioned (     id INT,     name STRING,     salary FLOAT ) PARTITIONED BY (department STRING) STORED AS TEXTFILE;`
-
-### **2️⃣ Add Partitions Manually**
-
-sql
-
- 
-
-`ALTER TABLE employees_partitioned ADD PARTITION (department='Engineering') LOCATION '/user/hive/warehouse/employees/engineering';`
-
-### **3️⃣ Query Using Partitioning**
-
-sql
-
- 
-
-`SELECT * FROM employees_partitioned WHERE department='Engineering';`
-
-✅ **This scans only the `Engineering` partition, making queries faster.**
-
-* * *
-
-# **🛠 Step 6: Hive Query Optimization Techniques**
-
-## **1️⃣ Enable Tez Execution Engine (Faster Queries)**
-
-sh
-
- 
-
-`sudo nano /usr/local/hive/conf/hive-site.xml`
-
-Add:
-
-xml
-
- 
-
-`<property>     <name>hive.execution.engine</name>     <value>tez</value> </property>`
-
-Restart Hive:
-
-sh
-
- 
-
-`exit hive`
-
-## **2️⃣ Enable Query Caching**
-
-sh
-
- 
-
-`sudo nano /usr/local/hive/conf/hive-site.xml`
-
-Add:
-
-xml
-
- 
-
-`<property>     <name>hive.compute.query.using.stats</name>     <value>true</value> </property>`
-
-Restart Hive:
-
-sh
-
- 
-
-`exit hive`
-
-## **3️⃣ Increase Hive Reducer Memory**
-
-sh
-
- 
-
-`sudo nano /usr/local/hadoop/etc/hadoop/mapred-site.xml`
-
-Add:
-
-xml
-
- 
-
-`<property>     <name>mapreduce.reduce.memory.mb</name>     <value>8192</value> </property>`
-
-Restart Hadoop:
-
-sh
-
- 
-
-`stop-dfs.sh start-dfs.sh`
-
-* * *
-
-# **✅ Hive Queries & Optimization Summary**
-
-| Hive Command | Description |
-| --- | --- |
-| `CREATE DATABASE hadoopdb;` | Create a Hive database |
-| `SHOW DATABASES;` | List available databases |
-| `USE hadoopdb;` | Select a database |
-| `CREATE TABLE employees (...);` | Create a Hive table |
-| `SHOW TABLES;` | List all tables in the current database |
-| `LOAD DATA INPATH '/path' INTO TABLE employees;` | Load data into a Hive table |
-| `SELECT * FROM employees;` | Retrieve all records |
-| `SELECT * FROM employees WHERE salary > 75000;` | Filter records |
-| `SELECT department, COUNT(*) FROM employees GROUP BY department;` | Count employees per department |
-| `SELECT department, AVG(salary) FROM employees GROUP BY department;` | Compute averages |
-| `SELECT * FROM employees ORDER BY salary DESC;` | Sort results |
-| `CREATE TABLE employees_partitioned (...) PARTITIONED BY (department STRING);` | Create a partitioned table |
-| `ALTER TABLE employees_partitioned ADD PARTITION (department='Engineering');` | Add partitions |
-| `SELECT * FROM employees_partitioned WHERE department='Engineering';` | Query a partitioned table |
-
-* * *
-
-
-## **🛠 Step 1: Tuning HDFS Performance**
-
-Since **HDFS** stores data across multiple nodes, optimizing it ensures **fast read/write operations**.
-
-### **1️⃣ Increase HDFS Block Size**
-
-👉 **Why?** Larger blocks reduce overhead and improve efficiency for large files.
-
-📌 **Modify `hdfs-site.xml` on `hadoop-master`**
-
-sh
-
- 
-
-`sudo nano /usr/local/hadoop/etc/hadoop/hdfs-site.xml`
-
-🔹 **Change the default block size to 256MB**
-
-xml
-
- 
-
-`<property>     <name>dfs.blocksize</name>     <value>268435456</value>  <!-- 256MB block size --> </property>`
-
-📌 **Save & Restart Hadoop**
-
-sh
-
- 
-
-`stop-dfs.sh start-dfs.sh`
-
-* * *
-
-### **2️⃣ Increase DataNode Replication Factor**
-
-👉 **Why?** Higher replication ensures **fault tolerance**, but increases storage requirements.
-
-📌 **Modify `hdfs-site.xml`**
-
-xml
-
- 
-
-`<property>     <name>dfs.replication</name>     <value>3</value>  <!-- Default is 3 --> </property>`
-
-📌 **Restart Hadoop**
-
-sh
-
- 
-
-`stop-dfs.sh start-dfs.sh`
-
-* * *
-
-## **🛠 Step 2: Optimizing YARN Resource Management**
-
-Since **YARN** manages computing resources, optimizing it ensures **efficient scheduling of jobs**.
-
-### **1️⃣ Allocate More Memory to YARN**
-
-👉 **Why?** Increasing memory ensures **MapReduce and Hive jobs have enough resources**.
-
-📌 **Modify `yarn-site.xml`**
-
-sh
-
- 
-
-`sudo nano /usr/local/hadoop/etc/hadoop/yarn-site.xml`
-
-🔹 **Increase memory allocation**
-
-xml
-
- 
-
-`<property>     <name>yarn.nodemanager.resource.memory-mb</name>     <value>8192</value>  <!-- 8GB per node --> </property>  <property>     <name>yarn.scheduler.maximum-allocation-mb</name>     <value>8192</value> </property>  <property>     <name>yarn.scheduler.minimum-allocation-mb</name>     <value>1024</value>  <!-- Minimum 1GB per container --> </property>`
-
-📌 **Restart YARN**
-
-sh
-
- 
-
-`stop-yarn.sh start-yarn.sh`
-
-* * *
-
-### **2️⃣ Increase Number of CPU Cores per Job**
-
-👉 **Why?** Allocating more CPU cores speeds up **parallel processing**.
-
-📌 **Modify `yarn-site.xml`**
-
-xml
-
- 
-
-`<property>     <name>yarn.nodemanager.resource.cpu-vcores</name>     <value>4</value>  <!-- 4 cores per node --> </property>`
-
-📌 **Restart YARN**
-
-sh
-
- 
-
-`stop-yarn.sh start-yarn.sh`
-
-* * *
-
-## **🛠 Step 3: Optimizing Hive Query Performance**
-
-Since **Hive translates SQL queries into MapReduce jobs**, optimizing it speeds up **big data analysis**.
-
-### **1️⃣ Enable Tez Execution Engine**
-
-👉 **Why?** **Tez is faster than MapReduce** for SQL-based queries.
-
-📌 **Modify `hive-site.xml`**
-
-sh
-
- 
-
-`sudo nano /usr/local/hive/conf/hive-site.xml`
-
-🔹 **Enable Tez Execution**
-
-xml
-
- 
-
-`<property>     <name>hive.execution.engine</name>     <value>tez</value> </property>`
-
-📌 **Restart Hive**
-
-sh
-
- 
-
-`exit hive`
-
-* * *
-
-### **2️⃣ Enable Query Caching**
-
-👉 **Why?** Caching prevents re-running expensive queries.
-
-📌 **Modify `hive-site.xml`**
-
-xml
-
- 
-
-`<property>     <name>hive.compute.query.using.stats</name>     <value>true</value> </property>`
-
-📌 **Restart Hive**
-
-sh
-
- 
-
-`exit hive`
-
-* * *
-
-### **3️⃣ Partition Tables for Faster Queries**
-
-👉 **Why?** **Partitioning reduces the amount of data scanned**, improving query speed.
-
-📌 **Modify table creation**
-
-sql
-
- 
-
-`CREATE TABLE employees_partitioned (     id INT,     name STRING,     salary FLOAT ) PARTITIONED BY (department STRING) STORED AS TEXTFILE;`
-
-📌 **Add Partitioned Data**
-
-sql
-
- 
-
-`ALTER TABLE employees_partitioned ADD PARTITION (department='Engineering') LOCATION '/user/hive/warehouse/employees/engineering';`
-
-📌 **Query Partitioned Data**
-
-sql
-
- 
-
-`SELECT * FROM employees_partitioned WHERE department='Engineering';`
-
-✅ **This scans only the `Engineering` partition, making queries much faster**.
-
-* * *
-
-## **🛠 Step 4: Configuring Hadoop for Large-Scale Data Processing**
-
-### **1️⃣ Enable Speculative Execution to Prevent Slow Tasks**
-
-👉 **Why?** Sometimes **some tasks run slower** than others. This setting **launches backup tasks** to prevent slowdowns.
-
-📌 **Modify `mapred-site.xml`**
-
-sh
-
- 
-
-`sudo nano /usr/local/hadoop/etc/hadoop/mapred-site.xml`
-
-🔹 **Enable Speculative Execution**
-
-xml
-
- 
-
-`<property>     <name>mapreduce.map.speculative</name>     <value>true</value> </property>  <property>     <name>mapreduce.reduce.speculative</name>     <value>true</value> </property>`
-
-📌 **Restart Hadoop**
-
-sh
-
- 
-
-`stop-dfs.sh start-dfs.sh`
-
-* * *
-
-### **2️⃣ Enable Hadoop Compression to Reduce Data Size**
-
-👉 **Why?** Compressed files **reduce disk usage** and **speed up processing**.
-
-📌 **Modify `core-site.xml`**
-
-sh
-
- 
-
-`sudo nano /usr/local/hadoop/etc/hadoop/core-site.xml`
-
-🔹 **Enable Snappy Compression**
-
-xml
-
- 
-
-`<property>     <name>io.compression.codecs</name>     <value>org.apache.hadoop.io.compress.SnappyCodec</value> </property>`
-
-📌 **Restart Hadoop**
-
-sh
-
- 
-
-`stop-dfs.sh start-dfs.sh`
-
-* * *
-
-# **✅ Hadoop & Hive Optimization Summary**
-
-| Optimization | Description |
-| --- | --- |
-| **Increase HDFS Block Size** | Improves storage efficiency (Set to **256MB**) |
-| **Increase YARN Memory & CPU Allocation** | Ensures better resource management (**8GB RAM, 4 cores per node**) |
-| **Enable Tez Execution Engine** | Makes Hive queries faster by replacing MapReduce |
-| **Use Table Partitioning in Hive** | **Reduces query execution time** by scanning only relevant data |
-| **Enable Speculative Execution** | Prevents slow tasks from delaying jobs |
-| **Enable Compression** | Saves **storage and speeds up processing** |
-
-* * *
-
-
-Add:
-
-xml
-
- 
-
-`<configuration>     <property>         <name>yarn.resourcemanager.hostname</name>         <value>hadoop-master</value>     </property>     <property>         <name>yarn.nodemanager.aux-services</name>         <value>mapreduce_shuffle</value>     </property> </configuration>`
-
-* * *
-
-#### **4️⃣ Configure `mapred-site.xml` (MapReduce Engine)**
-
-If missing, **create `mapred-site.xml`**:
-
-sh
-
- 
-
-`sudo nano /usr/local/hadoop/etc/hadoop/mapred-site.xml`
-
-Add:
-
-xml
-
- 
-
-`<configuration>     <property>         <name>mapreduce.framework.name</name>         <value>yarn</value>     </property>     <property>         <name>yarn.app.mapreduce.am.env</name>         <value>HADOOP_MAPRED_HOME=/usr/local/hadoop</value>     </property>     <property>         <name>mapreduce.map.env</name>         <value>HADOOP_MAPRED_HOME=/usr/local/hadoop</value>     </property>     <property>         <name>mapreduce.reduce.env</name>         <value>HADOOP_MAPRED_HOME=/usr/local/hadoop</value>     </property> </configuration>`
-
-* * *
-
-### **3.2 Add Worker Nodes to `workers` File**
-
-On the **master node (`hadoop-master`)**, edit:
-
-sh
-
- 
-
-`sudo nano /usr/local/hadoop/etc/hadoop/workers`
-
-Add:
-
- 
-
-`hadoop-worker-1 hadoop-worker-2`
-
-* * *
-
-### **3.3 Format HDFS Namenode**
-
-On the **master node**, run:
-
-sh
-
- 
+CopyEdit
 
 `hdfs namenode -format`
 
+✔ **Prepares Hadoop's distributed storage system (HDFS) for use**.
+
 * * *
 
-### **3.4 Start Hadoop Services**
+## **🛠 Step 7: Start Hadoop Services**
 
-On **the master node**, start all services:
+Hadoop has multiple services that need to be started.
 
-sh
-
- 
-
-`start-dfs.sh start-yarn.sh`
-
-Verify:
+### **1️⃣ Start HDFS (Hadoop Distributed File System)**
 
 sh
 
- 
+CopyEdit
+
+`start-dfs.sh`
+
+### **2️⃣ Start YARN (Resource Manager)**
+
+sh
+
+CopyEdit
+
+`start-yarn.sh`
+
+✔ **These commands start Hadoop's storage and job scheduling services.**
+
+* * *
+
+## **🛠 Step 8: Verify Hadoop is Running**
+
+Check that all **Hadoop services** are running:
+
+sh
+
+CopyEdit
 
 `jps`
 
-✅ Expected Output on Master:
-
-nginx
-
- 
-
-`NameNode SecondaryNameNode ResourceManager Jps`
-
-✅ Expected Output on Workers:
-
-nginx
-
- 
-
-`DataNode NodeManager Jps`
-
-* * *
-
-## **🛠 Step 4: Configuring Hadoop Environment (`hadoop-env.sh`)**
-
-After setting up the core Hadoop configurations, we also needed to **define the Java environment** for Hadoop to run properly.
-
-### **4.1 Set `JAVA_HOME` and `HADOOP_MAPRED_HOME` in `hadoop-env.sh`**
-
-This step was crucial because without setting `JAVA_HOME`, Hadoop services **would fail to start**.
-
-1️⃣ **Edit the `hadoop-env.sh` file** on **each node (master + workers)**:
-
-sh
-
- 
-
-`sudo nano /usr/local/hadoop/etc/hadoop/hadoop-env.sh`
-
-2️⃣ **Find the following line (or add it if missing):**
-
-sh
-
- 
-
-`# export JAVA_HOME=`
-
-3️⃣ **Update it to point to your Java installation:**
-
-sh
-
- 
-
-`export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64`
-
-4️⃣ **Also, add the following line for MapReduce:**
-
-sh
-
- 
-
-`export HADOOP_MAPRED_HOME=/usr/local/hadoop`
-
-✅ **Final `hadoop-env.sh` should contain these key settings:**
-
-sh
-
- 
-
-`export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64 export HADOOP_HOME=/usr/local/hadoop export HADOOP_MAPRED_HOME=$HADOOP_HOME export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop export YARN_CONF_DIR=$HADOOP_HOME/etc/hadoop`
-
-5️⃣ **Save and exit** (`CTRL+X → Y → ENTER`).
-
-6️⃣ **Apply the changes:**
-
-sh
-
- 
-
-`source /usr/local/hadoop/etc/hadoop/hadoop-env.sh`
-
-7️⃣ **Verify that `JAVA_HOME` and `HADOOP_MAPRED_HOME` are set properly:**
-
-sh
-
- 
-
-`echo $JAVA_HOME echo $HADOOP_MAPRED_HOME`
-
 ✅ **Expected Output:**
 
-swift
+CopyEdit
 
- 
+`12345 NameNode 12346 DataNode 12347 SecondaryNameNode 12348 ResourceManager 12349 NodeManager 12350 Jps`
 
-`/usr/lib/jvm/java-11-openjdk-amd64 /usr/local/hadoop`
-
-* * *
-
-### **4.2 Restart Hadoop Services**
-
-After updating the environment settings, we restarted Hadoop services:
-
-1️⃣ **Stop any running services (if necessary):**
-
-sh
-
- 
-
-`stop-dfs.sh stop-yarn.sh`
-
-2️⃣ **Restart Hadoop services:**
-
-sh
-
- 
-
-`start-dfs.sh start-yarn.sh`
-
-3️⃣ **Check if all services are running:**
-
-sh
-
- 
-
-`jps`
-
-✅ **Expected Output on Master (`hadoop-master`):**
-
-nginx
-
- 
-
-`NameNode SecondaryNameNode ResourceManager Jps`
-
-✅ **Expected Output on Workers (`hadoop-worker-1`, `hadoop-worker-2`):**
-
-nginx
-
- 
-
-`DataNode NodeManager Jps`
+✔ **Indicates all core Hadoop services are running successfully.**
 
 * * *
 
-### **📌 Step 5: Running HDFS Commands (Working with the Hadoop File System)**
+# **🚀 Part 2: Apache Hive Setup & Configuration**
 
-After setting up the Hadoop environment, the next step was to **store and manage files in HDFS (Hadoop Distributed File System)**.
+Hive is a **data warehouse system** that allows us to **run SQL-like queries on Hadoop**.
 
-#### **Why Use HDFS?**
-
--   Stores **large-scale** data efficiently across multiple nodes.
--   Provides **fault tolerance** (data is replicated across nodes).
--   Can handle **high-throughput access** for large files.
 * * *
 
-## **🛠 Step 5.1: Verify HDFS is Running**
+## **🛠 Step 9: Install Hive**
 
-Before working with HDFS, we checked if our cluster was running properly.
-
-1️⃣ **Run this command on the master node (`hadoop-master`)**:
+### **1️⃣ Download & Install Hive**
 
 sh
 
- 
+CopyEdit
 
-`hdfs dfsadmin -report`
+`wget https://archive.apache.org/dist/hive/hive-3.1.3/apache-hive-3.1.3-bin.tar.gz tar -xvzf apache-hive-3.1.3-bin.tar.gz sudo mv apache-hive-3.1.3-bin /usr/local/hive`
 
-✅ **Expected Output:**
+✔ **Extracts Hive and moves it to the correct directory.**
 
--   Lists **all active DataNodes** (`hadoop-worker-1`, `hadoop-worker-2`).
--   Shows total **storage capacity and usage**.
+### **2️⃣ Set Hive Environment Variables**
+
+sh
+
+CopyEdit
+
+`nano ~/.bashrc`
+
+🔹 **Add:**
+
+sh
+
+CopyEdit
+
+`export HIVE_HOME=/usr/local/hive export PATH=$PATH:$HIVE_HOME/bin`
+
+✔ **Ensures Hive commands work system-wide**.
+
+### **3️⃣ Apply Changes**
+
+sh
+
+CopyEdit
+
+`source ~/.bashrc`
+
 * * *
 
-## **🛠 Step 5.2: Basic HDFS Operations**
+## **🛠 Step 10: Configure Hive Metastore**
 
-Now, we ran **basic HDFS commands** to interact with the file system.
+Hive stores metadata in a **Metastore Database**.
+
+### **1️⃣ Edit `hive-site.xml`**
+
+sh
+
+CopyEdit
+
+`nano /usr/local/hive/conf/hive-site.xml`
+
+🔹 **Add database connection settings:**
+
+xml
+
+CopyEdit
+
+`<configuration>     <property>         <name>javax.jdo.option.ConnectionURL</name>         <value>jdbc:derby:;databaseName=/usr/local/hive/metastore_db;create=true</value>     </property>     <property>         <name>hive.metastore.warehouse.dir</name>         <value>/user/hive/warehouse</value>     </property> </configuration>`
+
+✔ **Configures Hive to store metadata using Apache Derby.**
+
+* * *
+
+## **🛠 Step 11: Initialize Hive Metastore**
+
+sh
+
+CopyEdit
+
+`schematool -initSchema -dbType derby`
+
+✔ **Prepares Hive's internal database for storing metadata.**
+
+* * *
+
+**📌 Next Up: Hive Query Execution, Data Ingestion & Full Automation!**
+(Continuing in next response…) 🚀
+
+4o
+
+##### You said:
+
+continue
+
+###### ChatGPT said:
+
+## **📌 Part 3: Running Hive Queries & Data Ingestion**
+
+Now that Hive is set up, we will:
+✔ **Create databases and tables in Hive**
+✔ **Load data from HDFS into Hive**
+✔ **Run SQL-like queries to analyze data**
+
+* * *
+
+## **🛠 Step 12: Start Hive & Create a Database**
+
+### **1️⃣ Start Hive CLI**
+
+sh
+
+CopyEdit
+
+`hive`
+
+✔ **Opens the Hive interactive command-line interface.**
+
+### **2️⃣ Create a New Database**
+
+sql
+
+CopyEdit
+
+`CREATE DATABASE nyctaxi;`
+
+✔ **Creates a database to store NYC taxi trip data.**
+
+### **3️⃣ Switch to the New Database**
+
+sql
+
+CopyEdit
+
+`USE nyctaxi;`
+
+✔ **Ensures all tables are created under this database.**
+
+* * *
+
+## **🛠 Step 13: Create Hive Table for NYC Taxi Data**
+
+Since our dataset is in **CSV format**, we need a **Hive table** to store structured data.
+
+### **1️⃣ Create a Table**
+
+sql
+
+CopyEdit
+
+`CREATE TABLE yellow_taxi (     VendorID INT,     tpep_pickup_datetime STRING,     tpep_dropoff_datetime STRING,     passenger_count INT,     trip_distance FLOAT,     fare_amount FLOAT,     total_amount FLOAT,     payment_type INT ) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE;`
+
+✔ **Defines a structured table for NYC taxi data.**
+
+* * *
+
+## **🛠 Step 14: Upload CSV Data to HDFS**
+
+Before loading data into Hive, we must first **move it into HDFS**.
 
 ### **1️⃣ Create a Directory in HDFS**
 
-HDFS requires a **user directory** for storing files.
+sh
+
+CopyEdit
+
+`hdfs dfs -mkdir -p /user/hive/warehouse/nyc_taxi/`
+
+✔ **Creates an HDFS location for storing taxi data.**
+
+### **2️⃣ Upload the NYC Taxi CSV File**
 
 sh
 
- 
+CopyEdit
 
-`hdfs dfs -mkdir /user hdfs dfs -mkdir /user/tejasjay94`
+`hdfs dfs -put -f yellow_tripdata_2025-03.csv /user/hive/warehouse/nyc_taxi/`
 
-✅ **Verify the directory exists:**
-
-sh
-
- 
-
-`hdfs dfs -ls /user`
-
-Expected Output:
-
-pgsql
-
- 
-
-`Found 1 items drwxr-xr-x - tejasjay94 supergroup 0 2025-03-08  /user/tejasjay94`
+✔ **Transfers the CSV file to HDFS.**
 
 * * *
 
-### **2️⃣ Upload Files to HDFS**
+## **🛠 Step 15: Load Data into Hive**
 
-To store data in HDFS, we **upload local files**.
+### **1️⃣ Load NYC Taxi Data from HDFS into Hive**
 
-1️⃣ **Create a sample text file locally:**
+sql
 
-sh
+CopyEdit
 
- 
+`LOAD DATA INPATH '/user/hive/warehouse/nyc_taxi/yellow_tripdata_2025-03.csv' INTO TABLE yellow_taxi;`
 
-`echo "Hadoop is powerful. Hadoop is scalable. Hadoop is open-source." > input.txt`
+✔ **Imports data from HDFS into Hive for querying.**
 
-2️⃣ **Upload the file to HDFS:**
+### **2️⃣ Verify Data in Hive**
 
-sh
+sql
 
- 
+CopyEdit
 
-`hdfs dfs -put input.txt /user/tejasjay94/`
+`SELECT * FROM yellow_taxi LIMIT 10;`
 
-3️⃣ **Verify that the file is uploaded:**
+✅ **Expected Output:**
 
-sh
+yaml
 
- 
+CopyEdit
 
-`hdfs dfs -ls /user/tejasjay94/`
-
-✅ Expected Output:
-
-bash
-
- 
-
-`-rw-r--r--   1 tejasjay94 supergroup   58 2025-03-08  /user/tejasjay94/input.txt`
+`1  2025-03-01 00:10:00  2025-03-01 00:20:00  1  2.5  12.00  15.50  1 1  2025-03-01 01:30:00  2025-03-01 01:45:00  2  5.0  20.00  23.00  2 ...`
 
 * * *
 
-### **3️⃣ Read a File from HDFS**
+## **🛠 Step 16: Run Analytics Queries in Hive**
 
-To check the content of an HDFS file:
+Hive allows us to run **SQL-like queries** for **big data analysis**.
+
+### **1️⃣ Count Total Number of Trips**
+
+sql
+
+CopyEdit
+
+`SELECT COUNT(*) FROM yellow_taxi;`
+
+✔ **Returns the total number of taxi trips.**
+
+### **2️⃣ Find the Average Fare**
+
+sql
+
+CopyEdit
+
+`SELECT AVG(fare_amount) FROM yellow_taxi;`
+
+✔ **Calculates the average fare per trip.**
+
+### **3️⃣ Find the Busiest Pickup Hours**
+
+sql
+
+CopyEdit
+
+`SELECT HOUR(tpep_pickup_datetime) AS pickup_hour, COUNT(*) AS trip_count FROM yellow_taxi GROUP BY HOUR(tpep_pickup_datetime) ORDER BY trip_count DESC LIMIT 5;`
+
+✔ **Determines the busiest times for taxis.**
+
+### **4️⃣ Order Trips by Fare Amount**
+
+sql
+
+CopyEdit
+
+`SELECT * FROM yellow_taxi ORDER BY fare_amount DESC LIMIT 10;`
+
+✔ **Lists the most expensive taxi trips.**
+
+* * *
+
+## **📌 Part 4: Automating Data Pipeline**
+
+Now that we have manually processed **Parquet → CSV → HDFS → Hive**, we will fully **automate the entire workflow**.
+
+* * *
+
+## **🛠 Step 17: Automating Data Ingestion**
+
+We will create a **shell script** that:
+✔ **Downloads new NYC taxi data monthly**
+✔ **Converts Parquet to CSV**
+✔ **Uploads CSV to HDFS**
+
+### **1️⃣ Create the Script (`data_ingestion.sh`)**
 
 sh
 
- 
+CopyEdit
 
-`hdfs dfs -cat /user/tejasjay94/input.txt`
+`nano data_ingestion.sh`
 
-✅ Expected Output:
-
-kotlin
-
- 
-
-`Hadoop is powerful. Hadoop is scalable. Hadoop is open-source.`
-
-* * *
-
-### **4️⃣ Download (Retrieve) a File from HDFS**
-
-If we want to **copy a file from HDFS to our local system**, we use:
+### **2️⃣ Add the Following Script**
 
 sh
 
- 
+CopyEdit
 
-`hdfs dfs -get /user/tejasjay94/input.txt my_local_input.txt`
+`#!/bin/bash  LOG_FILE="/home/tejasjay94/logs/data_pipeline.log" CURRENT_YEAR=$(date +'%Y') CURRENT_MONTH=$(date +'%m')  DATA_URL="https://www.nyc.gov/assets/tlc/downloads/yellow_tripdata_${CURRENT_YEAR}-${CURRENT_MONTH}.parquet" LOCAL_FILE="yellow_tripdata_${CURRENT_YEAR}-${CURRENT_MONTH}.parquet" CSV_FILE="yellow_tripdata_${CURRENT_YEAR}-${CURRENT_MONTH}.csv" HDFS_DIR="/user/hive/warehouse/nyc_taxi/"  echo "🚀 Starting Data Pipeline - $(date)" | tee -a $LOG_FILE  # Step 1: Download Latest Taxi Data echo "📥 Downloading $DATA_URL..." | tee -a $LOG_FILE wget -O "$LOCAL_FILE" "$DATA_URL"  # Step 2: Convert Parquet to CSV echo "🛠 Converting Parquet to CSV..." | tee -a $LOG_FILE python3 convert_parquet_to_csv.py "$LOCAL_FILE"  # Step 3: Upload to HDFS echo "📤 Uploading to HDFS..." | tee -a $LOG_FILE hdfs dfs -put -f "$CSV_FILE" "$HDFS_DIR"  echo "✅ Data Pipeline Completed Successfully!" | tee -a $LOG_FILE`
 
-✅ **Verify:**
-
-sh
-
- 
-
-`cat my_local_input.txt`
-
-Expected Output:
-
-kotlin
-
- 
-
-`Hadoop is powerful. Hadoop is scalable. Hadoop is open-source.`
-
-* * *
-
-### **5️⃣ Delete a File from HDFS**
-
-If we need to **remove a file** from HDFS:
+### **3️⃣ Make the Script Executable**
 
 sh
 
- 
+CopyEdit
 
-`hdfs dfs -rm /user/tejasjay94/input.txt`
+`chmod +x data_ingestion.sh`
 
-✅ **Verify:**
+* * *
+
+## **🛠 Step 18: Automating Hive Queries**
+
+We will now **automate table creation and incremental data load**.
+
+### **1️⃣ Create the Script (`run_hive_analysis.sh`)**
 
 sh
 
- 
+CopyEdit
 
-`hdfs dfs -ls /user/tejasjay94/`
+`nano run_hive_analysis.sh`
 
-✅ Expected Output: The file should be **gone**.
-
-* * *
-
-### **6️⃣ Delete a Directory from HDFS**
-
-To remove an **entire directory**:
+### **2️⃣ Add the Following Script**
 
 sh
 
- 
+CopyEdit
 
-`hdfs dfs -rm -r /user/tejasjay94`
+`#!/bin/bash  LOG_FILE="/home/tejasjay94/logs/hive_queries.log" CURRENT_YEAR=$(date +'%Y') CURRENT_MONTH=$(date +'%m')  CSV_FILE="/user/hive/warehouse/nyc_taxi/yellow_tripdata_${CURRENT_YEAR}-${CURRENT_MONTH}.csv" HIVE_QUERY_FILE="/home/tejasjay94/hive_queries_dynamic.sql"  cat <<EOF > $HIVE_QUERY_FILE USE nyctaxi;  CREATE TABLE IF NOT EXISTS yellow_taxi (     VendorID INT,     tpep_pickup_datetime STRING,     tpep_dropoff_datetime STRING,     passenger_count INT,     trip_distance FLOAT,     fare_amount FLOAT,     total_amount FLOAT,     payment_type INT ) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS TEXTFILE;  CREATE TABLE IF NOT EXISTS yellow_taxi_staging LIKE yellow_taxi;  LOAD DATA INPATH '${CSV_FILE}' INTO TABLE yellow_taxi_staging;  INSERT INTO TABLE yellow_taxi SELECT * FROM yellow_taxi_staging WHERE tpep_pickup_datetime NOT IN (SELECT tpep_pickup_datetime FROM yellow_taxi);  DROP TABLE yellow_taxi_staging; EOF  hive -f $HIVE_QUERY_FILE >> $LOG_FILE 2>&1`
 
-✅ **This deletes the directory and all its files**.
-
-* * *
-
-## **🛠 Step 5.3: Summary of HDFS Commands**
-
-| Command | Description |
-| --- | --- |
-| `hdfs dfs -ls /` | List files/directories in HDFS |
-| `hdfs dfs -mkdir /path` | Create a new directory in HDFS |
-| `hdfs dfs -put localfile /path` | Upload a file to HDFS |
-| `hdfs dfs -cat /path/file.txt` | Read file contents from HDFS |
-| `hdfs dfs -get /path/file.txt localfile` | Download a file from HDFS |
-| `hdfs dfs -rm /path/file.txt` | Delete a file from HDFS |
-| `hdfs dfs -rm -r /path` | Delete a directory from HDFS |
-
-* * *
-
-### **📌 Step 6: Running a Python-Based MapReduce Job in Hadoop**
-
-Now that we have **HDFS set up**, it's time to process data using **MapReduce**.
-We will implement a **Word Count program** using Python.
-
-* * *
-
-## **🛠 Step 6.1: Understanding MapReduce**
-
-MapReduce **processes big data in parallel** by splitting tasks across multiple nodes.
-
-1️⃣ **Mapper**
-
--   Reads input data **line by line**.
--   Emits **key-value pairs (word → count)**.
-
-2️⃣ **Reducer**
-
--   Aggregates key-value pairs.
--   Produces the **final count** for each word.
-* * *
-
-## **🛠 Step 6.2: Prepare Input Data**
-
-Before running MapReduce, we **create input data**.
-
-1️⃣ **Create a text file on the master node (`hadoop-master`)**:
+### **3️⃣ Make the Script Executable**
 
 sh
 
- 
+CopyEdit
 
-`echo "Hadoop is powerful. Hadoop is scalable. Hadoop is open-source." > input.txt`
+`chmod +x run_hive_analysis.sh`
 
-2️⃣ **Upload the file to HDFS:**
+* * *
+
+## **🛠 Step 19: Automate Execution with Cron Jobs**
+
+### **1️⃣ Open Cron Job Editor**
 
 sh
 
- 
+CopyEdit
 
-`hdfs dfs -mkdir /user/tejasjay94/input hdfs dfs -put input.txt /user/tejasjay94/input/`
+`crontab -e`
 
-3️⃣ **Verify the file in HDFS:**
-
-sh
-
- 
-
-`hdfs dfs -ls /user/tejasjay94/input/`
-
-✅ Expected Output:
-
-css
-
- 
-
-`-rw-r--r--   1 tejasjay94 supergroup   58 2025-03-08  /user/tejasjay94/input/input.txt`
-
-* * *
-
-## **🛠 Step 6.3: Write the Python MapReduce Code**
-
-### **1️⃣ Create `mapper.py` (Word Count Mapper)**
-
-1.  Open a new file:
-
-    sh
-
-     
-
-    `nano mapper.py`
-
-2.  Paste this Python code:
-
-    python
-
-     
-
-    `#!/usr/bin/env python3 import sys  # Read input from standard input for line in sys.stdin:     words = line.strip().split()     for word in words:         print(f"{word}\t1")  # Output: word <TAB> count`
-
-3.  **Save and exit** (`CTRL+X → Y → ENTER`).
-* * *
-
-### **2️⃣ Create `reducer.py` (Word Count Reducer)**
-
-1.  Open a new file:
-
-    sh
-
-     
-
-    `nano reducer.py`
-
-2.  Paste this Python code:
-
-    python
-
-     
-
-    `#!/usr/bin/env python3 import sys  current_word = None current_count = 0  for line in sys.stdin:     word, count = line.strip().split("\t")     count = int(count)      if word == current_word:         current_count += count     else:         if current_word:             print(f"{current_word}\t{current_count}")  # Print previous word count         current_word = word         current_count = count  # Print the last word count if current_word:     print(f"{current_word}\t{current_count}")`
-
-3.  **Save and exit** (`CTRL+X → Y → ENTER`).
-* * *
-
-### **3️⃣ Make Python Scripts Executable**
+### **2️⃣ Add Scheduled Jobs**
 
 sh
 
- 
+CopyEdit
 
-`chmod +x mapper.py reducer.py`
+`0 2 1 * * /home/tejasjay94/data_ingestion.sh 30 2 1 * * /home/tejasjay94/run_hive_analysis.sh`
 
-* * *
-
-## **🛠 Step 6.4: Run the MapReduce Job in Hadoop**
-
-Now, we run the **MapReduce job using Hadoop Streaming API**.
-
-### **Submit the Job**
-
-sh
-
- 
-
-`hadoop jar /usr/local/hadoop/share/hadoop/tools/lib/hadoop-streaming-3.3.6.jar \   -input /user/tejasjay94/input/input.txt \   -output /user/tejasjay94/output \   -mapper mapper.py \   -reducer reducer.py \   -file mapper.py \   -file reducer.py`
-
-✅ **Explanation of the Command:**
-
--   `-input` → Input file location in HDFS.
--   `-output` → Output directory in HDFS.
--   `-mapper` → Specifies the **Python mapper script**.
--   `-reducer` → Specifies the **Python reducer script**.
--   `-file` → Uploads Python scripts to Hadoop.
-* * *
-
-## **🛠 Step 6.5: Check the Output**
-
-1️⃣ **List the output directory in HDFS**:
-
-sh
-
- 
-
-`hdfs dfs -ls /user/tejasjay94/output/`
-
-✅ Expected Output:
-
-bash
-
- 
-
-`-rw-r--r--   1 tejasjay94 supergroup         0 2025-03-08  /user/tejasjay94/output/_SUCCESS -rw-r--r--   1 tejasjay94 supergroup        58 2025-03-08  /user/tejasjay94/output/part-00000`
-
-👉 `_SUCCESS` file means the job ran successfully.
+✔ **Runs the data ingestion & Hive analysis on the 1st of every month.**
 
 * * *
-
-2️⃣ **View the word count results:**
-
-sh
-
- 
-
-`hdfs dfs -cat /user/tejasjay94/output/part-00000`
-
-✅ Expected Output:
-
-kotlin
-
- 
-
-`Hadoop    3 is        3 open-source. 1 powerful. 1 scalable. 1`
-
-* * *
-
-
-
-
