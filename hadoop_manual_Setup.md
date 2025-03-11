@@ -1,259 +1,269 @@
-# **📌 Part 3: Running Hive Queries & Data Ingestion**
-Now that Hive is set up, we will:  
-✔ **Create databases and tables in Hive**  
-✔ **Load data from HDFS into Hive**  
-✔ **Run SQL-like queries to analyze data**  
+# Hadoop Ecosystem Manual Setup on GCP VM
 
----
+## **1\. GCP VM Setup**
 
-## **🛠 Step 12: Start Hive & Create a Database**
-### **1️⃣ Start Hive CLI**
+### **Create a VM Instance**
+
+1.  Go to [Google Cloud Console](https://console.cloud.google.com/).
+2.  Create a new Compute Engine VM.
+    -   Machine Type: `n1-standard-4`
+    -   OS: Ubuntu 20.04 LTS
+    -   Boot Disk: 100GB
+    -   Allow HTTP/HTTPS Traffic
+3.  SSH into the VM:
+
+    ```sh
+    gcloud compute ssh hadoop-master --zone=us-east1-b
+    ```
+
+* * *
+
+## **2\. Install Java 8**
+
+1.  Remove existing Java:
+
+    ```sh
+    sudo apt remove -y openjdk-11-jdk
+    ```
+
+2.  Install Java 8:
+
+    ```sh
+    sudo apt update && sudo apt install -y openjdk-8-jdk
+    ```
+
+3.  Verify installation:
+
+    ```sh
+    java -version
+    ```
+
+4.  Set JAVA\_HOME:
+
+    ```sh
+    echo "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64" >> ~/.bashrc
+    source ~/.bashrc
+    ```
+
+* * *
+
+## **3\. Install Hadoop (HDFS + YARN + MapReduce)**
+
+1.  Download Hadoop:
+
+    ```sh
+    cd /opt
+    sudo wget https://dlcdn.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
+    ```
+
+2.  Extract and move:
+
+    ```sh
+    sudo tar -xvzf hadoop-3.3.6.tar.gz
+    sudo mv hadoop-3.3.6 /usr/local/hadoop
+    ```
+
+3.  Set up environment variables:
+
+    ```sh
+    echo "export HADOOP_HOME=/usr/local/hadoop" >> ~/.bashrc
+    echo "export PATH=$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$PATH" >> ~/.bashrc
+    echo "export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop" >> ~/.bashrc
+    source ~/.bashrc
+    ```
+
+4.  Verify Hadoop installation:
+
+    ```sh
+    hadoop version
+    ```
+
+* * *
+
+## **4\. Configure HDFS and YARN**
+
+### **Edit Configuration Files**
+
+1.  **core-site.xml**:
+
+    ```sh
+    nano /usr/local/hadoop/etc/hadoop/core-site.xml
+    ```
+
+    Add:
+
+    ```xml
+    <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://localhost:9000</value>
+    </property>
+    ```
+
+2.  **hdfs-site.xml**:
+
+    ```sh
+    nano /usr/local/hadoop/etc/hadoop/hdfs-site.xml
+    ```
+
+    Add:
+
+    ```xml
+    <property>
+        <name>dfs.replication</name>
+        <value>1</value>
+    </property>
+    <property>
+        <name>dfs.namenode.name.dir</name>
+        <value>file:///usr/local/hadoop/data/namenode</value>
+    </property>
+    <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>file:///usr/local/hadoop/data/datanode</value>
+    </property>
+    ```
+
+3.  **yarn-site.xml**:
+
+    ```sh
+    nano /usr/local/hadoop/etc/hadoop/yarn-site.xml
+    ```
+
+    Add:
+
+    ```xml
+    <property>
+        <name>yarn.nodemanager.aux-services</name>
+        <value>mapreduce_shuffle</value>
+    </property>
+    ```
+
+4.  **mapred-site.xml**:
+
+    ```sh
+    cp /usr/local/hadoop/etc/hadoop/mapred-site.xml.template /usr/local/hadoop/etc/hadoop/mapred-site.xml
+    nano /usr/local/hadoop/etc/hadoop/mapred-site.xml
+    ```
+
+    Add:
+
+    ```xml
+    <property>
+        <name>mapreduce.framework.name</name>
+        <value>yarn</value>
+    </property>
+    ```
+
+* * *
+
+## **5\. Create Hadoop Storage Directories**
+
 ```sh
-hive
+sudo mkdir -p /usr/local/hadoop/data/namenode
+sudo mkdir -p /usr/local/hadoop/data/datanode
+sudo chown -R $USER:$USER /usr/local/hadoop/data
 ```
-✔ **Opens the Hive interactive command-line interface.**
 
-### **2️⃣ Create a New Database**
-```sql
-CREATE DATABASE taxi;
-```
-✔ **Creates a database to store taxi report data.**
+Format the NameNode:
 
-### **3️⃣ Switch to the New Database**
-```sql
-USE taxi;
-```
-✔ **Ensures all tables are created under this database.**
-
----
-
-## **🛠 Step 13: Create Hive Table for Taxi Report Data**
-Since our dataset is in **CSV format**, we need a **Hive table** to store structured data.
-
-### **1️⃣ Create a Table**
-```sql
-CREATE TABLE IF NOT EXISTS taxi_data (
-    Month_Year STRING,
-    LicenseClass STRING,
-    TripsPerDay INT,
-    FareboxPerDay INT,
-    UniqueDrivers INT,
-    UniqueVehicles INT,
-    VehiclesPerDay INT,
-    AvgDaysVehiclesonRoad FLOAT,
-    AvgHoursPerDayPerVehicle FLOAT,
-    AvgDaysDriversonRoad FLOAT,
-    AvgHoursPerDayPerDriver FLOAT,
-    AvgMinutesPerTrip FLOAT,
-    PercentofTripsPaidwithCreditCard STRING,
-    TripsPerDayShared INT
-)
-ROW FORMAT DELIMITED
-FIELDS TERMINATED BY ','
-STORED AS TEXTFILE;
-```
-✔ **Defines a structured table for Taxi Report Data.**  
-
----
-
-## **🛠 Step 14: Upload CSV Data to HDFS**
-Before loading data into Hive, we must first **move it into HDFS**.
-
-### **1️⃣ Create a Directory in HDFS**
 ```sh
-hdfs dfs -mkdir -p /user/hive/warehouse/taxi_data/
+hdfs namenode -format
 ```
-✔ **Creates an HDFS location for storing taxi data.**
 
-### **2️⃣ Upload the Taxi Report CSV File**
+* * *
+
+## **6\. Start Hadoop Services**
+
+### **Start HDFS**
+
 ```sh
-hdfs dfs -put -f taxi_data_2025-03.csv /user/hive/warehouse/taxi_data/
-```
-✔ **Transfers the CSV file to HDFS.**
-
----
-
-## **🛠 Step 15: Load Data into Hive**
-### **1️⃣ Load Taxi Report Data from HDFS into Hive**
-```sql
-LOAD DATA INPATH '/user/hive/warehouse/taxi_data/taxi_data_2025-03.csv'
-INTO TABLE taxi_data;
-```
-✔ **Imports data from HDFS into Hive for querying.**
-
-### **2️⃣ Verify Data in Hive**
-```sql
-SELECT * FROM taxi_data LIMIT 10;
-```
-✅ **Expected Output:**
-```
-2025-03  YellowCab  234567  5678900  15000  10000  9800  25.6  8.5  22.5  9.4  14.2  60%  45000
-...
+start-dfs.sh
 ```
 
----
+### **Start YARN**
 
-## **🛠 Step 16: Run Analytics Queries in Hive**
-Hive allows us to run **SQL-like queries** for **big data analysis**.
-
-### **1️⃣ Total Trips**
-```sql
-SELECT SUM(TripsPerDay) AS total_trips FROM taxi_data;
-```
-✔ **Returns the total number of taxi trips.**
-
-### **2️⃣ Average Farebox Per Day**
-```sql
-SELECT AVG(FareboxPerDay) AS avg_farebox FROM taxi_data;
-```
-✔ **Calculates the average fare collected per day.**
-
-### **3️⃣ Unique Drivers Count**
-```sql
-SELECT SUM(UniqueDrivers) AS total_unique_drivers FROM taxi_data;
-```
-✔ **Finds the number of unique drivers in the dataset.**
-
-### **4️⃣ Unique Vehicles Count**
-```sql
-SELECT SUM(UniqueVehicles) AS total_unique_vehicles FROM taxi_data;
-```
-✔ **Finds the number of unique vehicles in the dataset.**
-
-### **5️⃣ Average Hours Per Day Per Vehicle**
-```sql
-SELECT AVG(AvgHoursPerDayPerVehicle) AS avg_hours_vehicle FROM taxi_data;
-```
-✔ **Calculates the average daily usage of a vehicle.**
-
-### **6️⃣ Average Hours Per Day Per Driver**
-```sql
-SELECT AVG(AvgHoursPerDayPerDriver) AS avg_hours_driver FROM taxi_data;
-```
-✔ **Calculates the average daily working hours of a driver.**
-
----
-
-## **📌 Part 4: Automating Data Pipeline**
-Now that we have manually processed **CSV → HDFS → Hive**, we will fully **automate the entire workflow**.
-
----
-
-## **🛠 Step 17: Automating Data Ingestion**
-We will create a **shell script** that:  
-✔ **Downloads new taxi reports automatically**  
-✔ **Cleans the dataset**  
-✔ **Uploads CSV to HDFS**  
-
-### **1️⃣ Create the Script (`data_ingestion.sh`)**
 ```sh
-nano data_ingestion.sh
+start-yarn.sh
 ```
 
-### **2️⃣ Add the Following Script**
+### **Verify Processes**
+
 ```sh
-#!/bin/bash
-
-DATA_URL="https://www.nyc.gov/assets/tlc/downloads/csv/data_reports_monthly.csv"
-LOCAL_FILE="taxi_data_$(date +'%Y-%m').csv"
-HDFS_DIR="/user/hive/warehouse/taxi_data/"
-
-echo "🚀 Starting NYC Taxi Data Pipeline - $(date)"
-
-# Step 1: Download the latest Taxi Data
-echo "📥 Downloading $DATA_URL..."
-wget -O "$LOCAL_FILE" "$DATA_URL"
-
-# Step 2: Remove header row
-echo "🛠 Cleaning data - Removing header row..."
-tail -n +2 "$LOCAL_FILE" > "cleaned_$LOCAL_FILE"
-
-# Step 3: Upload to HDFS
-echo "📤 Uploading to HDFS..."
-hdfs dfs -put -f "cleaned_$LOCAL_FILE" "$HDFS_DIR"
-
-echo "✅ Data Pipeline Completed Successfully!"
+jps
 ```
 
-### **3️⃣ Make the Script Executable**
+You should see:
+
+```
+NameNode
+DataNode
+ResourceManager
+NodeManager
+SecondaryNameNode
+```
+
+* * *
+
+## **7\. Fix Permission Issues (If Any)**
+
+### **Set Correct File Permissions**
+
 ```sh
-chmod +x data_ingestion.sh
+sudo chown -R $USER:$USER /usr/local/hadoop
+sudo chown -R $USER:$USER /usr/local/hadoop/data
 ```
 
----
+### **Enable Passwordless SSH**
 
-## **🛠 Step 18: Automating Hive Queries**
-We will now **automate table creation and incremental data load**.
-
-### **1️⃣ Create the Script (`run_hive_analysis.sh`)**
 ```sh
-nano run_hive_analysis.sh
+ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
 ```
 
-### **2️⃣ Add the Following Script**
+Test SSH:
+
 ```sh
-#!/bin/bash
-
-LOG_FILE="~/logs/hive_queries.log"
-EMAIL="tejastj33333@gmail.com"
-
-CURRENT_YEAR=$(date +'%Y')
-CURRENT_MONTH=$(date +'%m')
-CSV_FILE="/user/hive/warehouse/taxi_data/taxi_data_${CURRENT_YEAR}-${CURRENT_MONTH}.csv"
-HIVE_QUERY_FILE="~/hive_queries_dynamic.sql"
-
-echo "🚀 Generating Hive Query for $CURRENT_YEAR-$CURRENT_MONTH" | tee -a $LOG_FILE
-
-cat <<EOF > $HIVE_QUERY_FILE
-USE taxi;
-
-CREATE TABLE IF NOT EXISTS taxi_data_staging LIKE taxi_data;
-
-LOAD DATA INPATH '${CSV_FILE}' INTO TABLE taxi_data_staging;
-
-INSERT INTO TABLE taxi_data
-SELECT * FROM taxi_data_staging
-WHERE NOT EXISTS (
-    SELECT 1 FROM taxi_data
-    WHERE taxi_data.Month_Year = taxi_data_staging.Month_Year
-);
-
-DROP TABLE taxi_data_staging;
-EOF
-
-echo "🚀 Running Hive Analysis..." | tee -a $LOG_FILE
-if hive -f $HIVE_QUERY_FILE >> $LOG_FILE 2>&1; then
-    echo "✅ Hive Queries Executed Successfully!" | tee -a $LOG_FILE
-else
-    echo "❌ Hive Queries Failed!" | tee -a $LOG_FILE
-    echo -e "Subject: 🚨 Hive Query Execution Failed!\n\nCheck logs: $LOG_FILE" | sendmail -v $EMAIL
-    exit 1
-fi
-
-echo "✅ Hive Analysis Completed Successfully!" | tee -a $LOG_FILE
+ssh localhost
 ```
 
-### **3️⃣ Make the Script Executable**
+If SSH asks for a password, check `/etc/ssh/sshd_config`:
+
 ```sh
-chmod +x run_hive_analysis.sh
+sudo nano /etc/ssh/sshd_config
 ```
 
----
+Ensure these lines exist and are **not commented out (`#`)**:
 
-## **🛠 Step 19: Automate Execution with Cron Jobs**
-### **1️⃣ Open Cron Job Editor**
+```
+PermitRootLogin yes
+PubkeyAuthentication yes
+PasswordAuthentication yes
+```
+
+Restart SSH:
+
 ```sh
-crontab -e
+sudo systemctl restart ssh
 ```
 
-### **2️⃣ Add Scheduled Jobs**
+* * *
+
+## **8\. Verify Hadoop Setup**
+
+Run:
+
 ```sh
-0 2 1 * * /home/tejasjay94/data_ingestion.sh
-30 2 1 * * /home/tejasjay94/run_hive_analysis.sh
+hdfs dfsadmin -report
 ```
-✔ **Runs the data ingestion & Hive analysis on the 1st of every month.**
 
----
+If it shows the **live datanode**, the setup is successful! 🎉
 
-🚀 **Your Data Pipeline is Fully Automated!**  
-💡 **Let me know if you need further improvements!** 🚀
+* * *
+
+## **Next Steps**
+
+-   Upload a test file to HDFS
+-   Install Pig, Hive, Flume, HBase
+-   Set up data ingestion pipelines
+
+🚀 Your Hadoop ecosystem is now ready on GCP! 🎯
