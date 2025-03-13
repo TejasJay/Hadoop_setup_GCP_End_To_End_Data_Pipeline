@@ -1,4 +1,4 @@
-📌 **An automated data pipeline for processing NYC Taxi monthly reports using Hadoop, Hive, and HDFS.**
+**An automated data pipeline for processing NYC Taxi monthly reports using Hadoop, Hive, and HDFS.**
 ✔ **CSV ingestion from NYC Open Data**
 ✔ **Data storage in HDFS**
 ✔ **SQL analytics with Hive**
