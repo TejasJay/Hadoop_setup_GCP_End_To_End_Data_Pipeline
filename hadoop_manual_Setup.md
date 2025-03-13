@@ -260,10 +260,4 @@ If it shows the **live datanode**, the setup is successful! 🎉
 
 * * *
 
-## **Next Steps**
 
--   Upload a test file to HDFS
--   Install Pig, Hive, Flume, HBase
--   Set up data ingestion pipelines
-
-🚀 Your Hadoop ecosystem is now ready on GCP! 🎯
